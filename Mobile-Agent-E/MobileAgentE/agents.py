@@ -87,6 +87,17 @@ def extract_json_object(text, json_type="dict"):
     Returns:
     - dict or list: The extracted JSON object, or None if parsing fails.
     """
+    #  hgong fix bug arguments = null，avoid execute atomic opertion failed, like home null
+    def parse_and_fix(json_str):
+        try:
+            obj = json.loads(json_str)
+            # 修复: 将 "arguments": null 替换为 {}
+            if isinstance(obj, dict) and obj.get("arguments") is None:
+                obj["arguments"] = {}
+            return obj
+        except json.JSONDecodeError:
+            return None
+
     try:
         if "//" in text:
             # Remove comments starting with //
@@ -94,9 +105,11 @@ def extract_json_object(text, json_type="dict"):
         if "# " in text:
             # Remove comments starting with #
             text = re.sub(r'#.*', '', text)
-        # Try to parse the entire text as JSON
-        return json.loads(text)
-    except json.JSONDecodeError:
+        #Try to parse the entire text as JSON
+        result = parse_and_fix(text)
+        if result is not None:
+            return result
+    except Exception:
         pass  # Not a valid JSON, proceed to extract from text
 
     # Define patterns for extracting JSON objects or arrays
@@ -107,18 +120,16 @@ def extract_json_object(text, json_type="dict"):
     code_block_match = re.search(code_block_pattern, text, re.DOTALL)
     if code_block_match:
         json_str = code_block_match.group(1)
-        try:
-            return json.loads(json_str)
-        except json.JSONDecodeError:
-            pass  # Failed to parse JSON inside code block
+        result = parse_and_fix(json_str)
+        if result is not None:
+            return result
 
     # Fallback to searching the entire text
     matches = re.findall(json_pattern, text, re.DOTALL)
     for match in matches:
-        try:
-            return json.loads(match)
-        except json.JSONDecodeError:
-            continue  # Try the next match
+        result = parse_and_fix(match)
+        if result is not None:
+            return result
 
     # If all attempts fail, return None
     return None
@@ -198,7 +209,6 @@ class Manager(BaseAgent):
             # first time planning
             prompt += "---\n"
             prompt += "Think step by step and make an high-level plan to achieve the user's instruction. If the request is complex, break it down into subgoals. If the request involves exploration, include concrete subgoals to quantify the investigation steps. The screenshot displays the starting state of the phone.\n\n"
-            prompt += "If any names (e.g., contact names) appear in the user's instruction and they are in Chinese, always keep them in their original Chinese form when generating your plan and subgoals.  Do not translate the name into Pinyin or English, and do not use escape sequences (e.g., \\uXXXX).\n\n"
 
             if info_pool.shortcuts != {}:
                 prompt += "### Available Shortcuts from Past Experience ###\n"
@@ -514,6 +524,11 @@ class Operator(BaseAgent):
             return None, 0, None
         action, arguments = action_object["name"], action_object["arguments"]
         action = action.strip()
+
+        # hgong fix bug arguments = null，avoid execute atomic opertion failed, like home null
+        if arguments is None:
+            arguments = {}
+            action_object["arguments"] = {}
 
         # execute atomic action
         if action in ATOMIC_ACTION_SIGNITURES:
