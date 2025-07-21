@@ -49,7 +49,7 @@ def track_usage(res_json, api_key):
         "completion_token_price": completion_token_price
     }
 
-def inference_chat(chat, model, api_url, token, usage_tracking_jsonl = None, max_tokens = 2048, temperature = 0.0):
+def inference_chat(chat, model, api_url, token, usage_tracking_jsonl = None, max_tokens = 32768, temperature = 0.0):
     if token is None:
         raise ValueError("API key is required")
     
