@@ -80,9 +80,15 @@ QWEN_API_KEY = os.environ.get("QWEN_API_KEY", default=None)
 
 INIT_TIPS = """0. If you see many Chinese characters on screen, you can think that the user is Chinese. So when you look for the application, you should strictly match the English and Chinese names of the application.
 1. By default, Alipay is used for payment, unless the user has other requirements. If you couldn't see the Alipay, you can use Wechat payment.
-2. Swipe-up actions are not functional on this device and must be avoided. Use swipe-down to open search bar. You could enter its name to search the application. If the user is Chinese, you must enter its Chinese name.
+2. Swipe-up actions are not functional on some device and must be avoided. In that case, use swipe-down to open search bar. You could enter its name to search the application. If the user is Chinese, you must enter its Chinese name.
 3. You should try to tap the close button when you see the advertisement.
 4. Sometimes the application may ask you to use discounts, ignore it. You must tap the close button.
+5. When using the `Open_App` action, use the application's name as it appears on the screen. This may be in a different language from the English name provided in the instructions (e.g., using "中国联通" for "China Unicom").
+6. Be aware of confirmation pop-ups or promotional offers that may appear after making a selection. You may need to interact with this pop-up (e.g., by confirming your choice or dismissing an offer) to proceed with the task. 
+7. On some phone model, swiping from y1 = 100 can't work as expected due to system gestures. In that case, start vertical swipe gestures from y1 = 200 or lower.
+8. For tasks with conditional logic (e.g., "if X, then do Y"), first focus on finding the information needed to evaluate the condition (X). Only after confirming the condition is met should you proceed with the action (Y). 
+9. When a task requires you to find specific information within an app (e.g., "remaining credit"), be prepared to identify the corresponding term in the app's native language (e.g., "剩余话费").
+10. When you see the fingerprint icon on the payment interface, stop.
 """
 
 ## other
