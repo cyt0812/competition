@@ -72,10 +72,17 @@ QWEN_API_KEY = os.environ.get("QWEN_API_KEY", default=None)
 
 
 ## Initial Tips provided by user; You can add additional custom tips ###
-INIT_TIPS = """0. Do not add any payment information. If you are asked to sign in, ignore it or sign in as a guest if possible. Close any pop-up windows when opening an app.
-1. By default, no APPs are opened in the background.
-2. Screenshots may show partial text in text boxes from your previous input; this does not count as an error.
-3. When creating new Notes, you do not need to enter a title unless the user specifically requests it.
+# INIT_TIPS = """0. Do not add any payment information. If you are asked to sign in, ignore it or sign in as a guest if possible. Close any pop-up windows when opening an app.
+# 1. By default, no APPs are opened in the background.
+# 2. Screenshots may show partial text in text boxes from your previous input; this does not count as an error.
+# 3. When creating new Notes, you do not need to enter a title unless the user specifically requests it.
+# """
+
+INIT_TIPS = """0. If you see many Chinese characters on screen, you can think that the user is Chinese. So when you look for the application, you should strictly match the English and Chinese names of the application.
+1. By default, Alipay is used for payment, unless the user has other requirements. If you couldn't see the Alipay, you can use Wechat payment.
+2. Swipe-up actions are not functional on this device and must be avoided. Use swipe-down to open search bar. You could enter its name to search the application. If the user is Chinese, you must enter its Chinese name.
+3. You should try to tap the close button when you see the advertisement.
+4. Sometimes the application may ask you to use discounts, ignore it. You must tap the close button.
 """
 
 ## other
