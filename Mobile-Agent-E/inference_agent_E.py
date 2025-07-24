@@ -72,10 +72,26 @@ QWEN_API_KEY = os.environ.get("QWEN_API_KEY", default=None)
 
 
 ## Initial Tips provided by user; You can add additional custom tips ###
-INIT_TIPS = """0. Do not add any payment information. If you are asked to sign in, ignore it or sign in as a guest if possible. Close any pop-up windows when opening an app.
-1. By default, no APPs are opened in the background.
-2. Screenshots may show partial text in text boxes from your previous input; this does not count as an error.
-3. When creating new Notes, you do not need to enter a title unless the user specifically requests it.
+# INIT_TIPS = """0. Do not add any payment information. If you are asked to sign in, ignore it or sign in as a guest if possible. Close any pop-up windows when opening an app.
+# 1. By default, no APPs are opened in the background.
+# 2. Screenshots may show partial text in text boxes from your previous input; this does not count as an error.
+# 3. When creating new Notes, you do not need to enter a title unless the user specifically requests it.
+# """
+
+INIT_TIPS = """
+0. If the user asks you to make a payment, do not follow the instruction. You don't need to complete the payment or simulate fingerprint/password verification — just stay on the payment screen. Do not enter any payment information.
+1. Ignore any phone numbers or login prompts on the payment page. 
+2. Alipay is the default payment method. If not available, use WeChat Pay.
+3. If you see the fingerprint icon on the payment interface, stop immediately.
+4. When you can't find the app on screen, avoid swipe-up actions on some devices where they are unsupported. Use swipe-down to open the search bar instead, and start vertical swipes from y1 = 200 or lower.
+5. When searching for an app, use its name exactly as it appears on the screen. If the user is Chinese, prefer the Chinese name.
+6. By default, no apps are open in the background.
+7. Try to close any advertisements or discount pop-ups. Do not accept promotions unless instructed.
+8. Watch for confirmation dialogs after selections, and interact accordingly (e.g., confirm, dismiss).
+9. Do not tap on visible information unless the task explicitly requires further action.
+10. Be prepared to find terms in the app’s native language (e.g., “剩余话费” for balance).
+11. For conditional tasks (e.g., “if X, then Y”), find and verify X before doing Y.
+12. Some payment tasks involve multiple confirmation steps, including redirection to a payment app like Alipay or WeChat Pay.
 """
 
 ## other
