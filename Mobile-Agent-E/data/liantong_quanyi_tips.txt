@@ -1,0 +1,19 @@
+INIT_TIPS = """
+1. When attempting to claim any user benefits or rewards, search for common terms like 'Claim', 'Benefits', 'Welfare', or similar.
+2. If a pop-up window or ad interrupts the flow, close it and always retry the previous action to ensure continuity.
+3. If the expected keywords are not immediately found, continue exploring. Only treat the task as complete if a clear message such as 'No benefits available to claim' is detected.
+4. Avoid clicking any ads, paid content, or promotional elements such as '立即抢购', '限时优惠', or '开通会员'.
+5. If a click action on a legitimate element (like '福利中心') fails, you must retry at least once or report it as non-functional. Do not skip or replace the action unless instructed.
+"""
+
+if task.app_name == "联通" and "领取" in task.instruction and "权益" in task.instruction:
+    task.extra_tips += """
+    1. Always prioritize centralized entry points like '福利中心', '我的权益', or '权益专区' before attempting to claim any specific benefit card.If both primary and secondary entry points are present, you must enter the deeper layer (e.g., '我的权益') first.
+    2. Only claim free benefits. Strictly avoid any cards or buttons related to 'VIP会员', '会员价', '限时优惠', '首月特惠', or that show prices. These are considered paid content and must not be selected.
+    3. If paid content is accidentally selected, the action must be canceled or rolled back immediately.
+    4. Do not click 'Claim Now' or any benefit card associated with promotional icons (e.g., '国家大剧院') or video memberships (e.g., 爱奇艺、腾讯视频、哔哩哔哩) unless explicitly instructed.
+    5.If you cannot find the 'Welfare Center' entry, look carefully at the top right corner of the screen. It may appear as a small icon with the text '福利中心' and a gift box graphic. Tap on that icon if visible.
+    6.Do not click 'Claim Now' if it is associated with icons like 'National Centre for the Performing Arts' or other promotional content.
+
+    """
+

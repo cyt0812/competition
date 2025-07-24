@@ -1,0 +1,13 @@
+{
+    "length": 1,
+    "scenario": "LIANTONG_APP_RIGHTS",
+    "scenario_id": 1001,
+    "tasks": [
+        {"instruction": "Open the China Unicom app"},
+        {"instruction": "Click the bottom right corner for Benefits"},
+        {"instruction": "adb_click:550,1741"},
+        {"instruction": "Click the top right corner for Welfare Center"},
+        {"instruction": "Click My Benefits"},
+        {"instruction": "Click Claim"}
+    ]
+} 
