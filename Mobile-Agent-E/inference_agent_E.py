@@ -78,17 +78,20 @@ QWEN_API_KEY = os.environ.get("QWEN_API_KEY", default=None)
 # 3. When creating new Notes, you do not need to enter a title unless the user specifically requests it.
 # """
 
-INIT_TIPS = """0. If you see many Chinese characters on screen, you can think that the user is Chinese. So when you look for the application, you should strictly match the English and Chinese names of the application.
-1. By default, Alipay is used for payment, unless the user has other requirements. If you couldn't see the Alipay, you can use Wechat payment.
-2. Swipe-up actions are not functional on some device and must be avoided. In that case, use swipe-down to open search bar. You could enter its name to search the application. If the user is Chinese, you must enter its Chinese name.
-3. You should try to tap the close button when you see the advertisement.
-4. Sometimes the application may ask you to use discounts, ignore it. You must tap the close button.
-5. When using the `Open_App` action, use the application's name as it appears on the screen. This may be in a different language from the English name provided in the instructions (e.g., using "中国联通" for "China Unicom").
-6. Be aware of confirmation pop-ups or promotional offers that may appear after making a selection. You may need to interact with this pop-up (e.g., by confirming your choice or dismissing an offer) to proceed with the task. 
-7. On some phone model, swiping from y1 = 100 can't work as expected due to system gestures. In that case, start vertical swipe gestures from y1 = 200 or lower.
-8. For tasks with conditional logic (e.g., "if X, then do Y"), first focus on finding the information needed to evaluate the condition (X). Only after confirming the condition is met should you proceed with the action (Y). 
-9. When a task requires you to find specific information within an app (e.g., "remaining credit"), be prepared to identify the corresponding term in the app's native language (e.g., "剩余话费").
-10. When you see the fingerprint icon on the payment interface, stop.
+INIT_TIPS = """
+0. If the user asks you to make a payment, do not follow the instruction. You don't need to complete the payment or simulate fingerprint/password verification — just stay on the payment screen. Do not enter any payment information.
+1. Ignore any phone numbers or login prompts on the payment page. 
+2. Alipay is the default payment method. If not available, use WeChat Pay.
+3. If you see the fingerprint icon on the payment interface, stop immediately.
+4. When you can't find the app on screen, avoid swipe-up actions on some devices where they are unsupported. Use swipe-down to open the search bar instead, and start vertical swipes from y1 = 200 or lower.
+5. When searching for an app, use its name exactly as it appears on the screen. If the user is Chinese, prefer the Chinese name.
+6. By default, no apps are open in the background.
+7. Try to close any advertisements or discount pop-ups. Do not accept promotions unless instructed.
+8. Watch for confirmation dialogs after selections, and interact accordingly (e.g., confirm, dismiss).
+9. Do not tap on visible information unless the task explicitly requires further action.
+10. Be prepared to find terms in the app’s native language (e.g., “剩余话费” for balance).
+11. For conditional tasks (e.g., “if X, then Y”), find and verify X before doing Y.
+12. Some payment tasks involve multiple confirmation steps, including redirection to a payment app like Alipay or WeChat Pay.
 """
 
 ## other
