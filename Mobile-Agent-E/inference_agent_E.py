@@ -74,8 +74,10 @@ QWEN_API_KEY = os.environ.get("QWEN_API_KEY", default=None)
 ## Initial Tips provided by user; You can add additional custom tips ###
 
 import os
-# 读取liantong_quanyi_tips.txt文件内容
-tips_file_path = os.path.join(os.path.dirname(__file__), 'data', 'liantong_quanyi_tips.txt')
+
+# 读取custom_tips_for_cn_apps.txt文件内容
+tips_file_path = os.path.join(os.path.dirname(__file__), 'data', 'custom_tips_for_cn_apps.txt')
+
 with open(tips_file_path, 'r', encoding='utf-8') as f:
     content = f.read()
 
