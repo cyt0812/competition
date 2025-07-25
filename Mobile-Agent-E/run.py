@@ -65,7 +65,7 @@ def main():
             print("ERROR:", e)
     else:
         # multi task inference
-        task_json = json.load(open(args.tasks_json, "r"))
+        task_json = json.load(open(args.tasks_json, "r",encoding="utf-8"))
         if "tasks" in task_json:
             tasks = task_json["tasks"]
         else:
