@@ -5,7 +5,7 @@
     "tasks": [
         {
             "task_id": "record_expense",
-            "instruction": "You need to help the user record an expense. The user will provide expense amount, category, date, and account information. Please parse this information and create a new expense record in the 随手记 (Suishouji) app, ensuring all information is filled out accurately, and finally click the \"完成\" (Complete) button to submit the record.",
+            "instruction": "You need to help the user record an expense. For example, today I ate out and spent 80 yuan, using 随手记 to record the transaction.",
             "type": "single_app",
             "apps": ["随手记"],
             "rubrics": [
