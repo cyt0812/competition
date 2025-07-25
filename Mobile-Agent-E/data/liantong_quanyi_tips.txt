@@ -1,19 +1,58 @@
 INIT_TIPS = """
-1. When attempting to claim any user benefits or rewards, search for common terms like 'Claim', 'Benefits', 'Welfare', or similar.
-2. If a pop-up window or ad interrupts the flow, close it and always retry the previous action to ensure continuity.
-3. If the expected keywords are not immediately found, continue exploring. Only treat the task as complete if a clear message such as 'No benefits available to claim' is detected.
-4. Avoid clicking any ads, paid content, or promotional elements such as '立即抢购', '限时优惠', or '开通会员'.
-5. If a click action on a legitimate element (like '福利中心') fails, you must retry at least once or report it as non-functional. Do not skip or replace the action unless instructed.
+### MobileAgent Operational Guidelines (Unified Version)
+
+1. [App Interaction Rules]
+   - By default, scroll through the home screens to locate the app before attempting to use the system search bar.
+   - Do not launch apps in the background unless explicitly instructed.
+   - If the target app icon is visible on the current screen (either in English or Chinese), tap it directly.
+   - If the app icon is not found:
+     - Tap the search bar if it's at the bottom of the screen;
+     - If gesture navigation is enabled, swipe up or down from the center of the screen to open the system search bar;
+     - Once the system search bar appears, accurately enter the app name and select the result with the correct app icon and name (avoid web results or advertisements).
+     - If the app appears under a section labeled “Local Apps” (本机应用) after searching, tap it directly.
+     - After entering the app name in the search bar, if the app immediately appears on the screen, tap it directly. If not, press the search/enter button to trigger the full search.
+   - Immediately close all pop-up ads, discount offers, or other interruptions, and retry the previous action to maintain task flow.
+   - When creating a new Note, there's no need to enter a title unless explicitly instructed.
+   - Do not press the search/enter key or activate any keyboard shortcut immediately after typing.
+   - First, carefully observe if the target app appears on the current screen under any section (especially "Local Apps"). If the app is visible, tap it directly.
+   - Do not use any predefined shortcut such as "Tap_Type_and_Enter" or trigger "Enter" immediately after typing.
+
+2. [Language & Interface Handling]
+   - If the interface is predominantly in Chinese, assume the user is a Chinese speaker.
+   - Convert English app names to Chinese equivalents when searching in a Chinese-language environment.
+   - Pay attention to functional dialogs such as confirmation prompts or option selectors and respond accordingly.
+
+3. [Payment Restrictions]
+   - Do not proceed with actual payment or simulate fingerprint/password verification — simply stop at the payment screen.
+   - Ignore any login requests or prompts for phone number binding during the payment process.
+   - If a confirmation (e.g., a “Confirm” button) is needed before reaching the payment screen, it's acceptable to proceed.
+   - If the user asks you to make a payment, do not follow the instruction. You don't need to complete the payment or simulate fingerprint/password verification — just stay on the payment screen. Do not enter any payment information.
+   - If you see the fingerprint icon on the payment interface, stop immediately.
+   - If the phone balance does not meet the specified requirement, tap “Remaining Balance” to complete the recharge process.
+   - If the current screen contains text like "确认支付" or "Confirm Payment",  
+      Then: pause all further steps.  
+      Do NOT trigger any payment-related actions.
+
+
+4. [General Rules for Claiming Benefits or Rewards]
+   - Look for keywords such as “Claim”, “Benefits”, “Welfare”, or similar.
+   - If a message like “No benefits available to claim” appears, the task can be considered complete. Otherwise, continue searching.
+   - If a click action fails (e.g., tapping “Welfare Center”), retry at least once. Do not skip or substitute the action unless explicitly allowed.
+   - Never click on ads, paid content, or promotional items with labels such as “Limited-time Offer”, “Join Now”, “VIP Exclusive”, or “First-month Special”.
+   - If paid content is mistakenly selected, cancel the action or go back immediately.
+   - Do not click 'Claim Now' or any benefit card associated with promotional icons (e.g., '国家大剧院') or video memberships (e.g., 爱奇艺、腾讯视频、哔哩哔哩) unless explicitly instructed.
+   - Do not click 'Claim Now' if it is associated with icons like 'National Centre for the Performing Arts' or other promotional content.
+   - If you cannot find the 'Welfare Center' entry, look carefully at the top right corner of the screen. It may appear as a small icon with the text '福利中心' and a gift box graphic. Tap on that icon if visible.
+   - If the expected keywords are not immediately found, continue exploring. Only treat the task as complete if a clear message such as 'No benefits available to claim' is detected.
+   - Avoid clicking any ads, paid content, or promotional elements such as '立即抢购', '限时优惠', or '开通会员'.
+   - Always prioritize centralized entry points like '福利中心', '我的权益', or '权益专区' before attempting to claim any specific benefit card.If both primary and secondary entry points are present, you must enter the deeper layer (e.g., '我的权益') first.
+   - Only claim free benefits. Strictly avoid any cards or buttons related to 'VIP会员', '会员价', '限时优惠', '首月特惠', or that show prices. These are considered paid content and must not be selected.
+
+5. [Special Instructions for the China Unicom App]
+   - Applies only if the task is within the “China Unicom” app **and** involves instructions containing both “claim” and “benefits”:
+     - Prioritize centralized entry points such as “Welfare Center”, “My Benefits”, or “Benefits Zone”.
+       - If both primary and secondary entries are present, always enter the deeper layer (e.g., “My Benefits”) before proceeding.
+     - Only claim **free** benefits. Strictly avoid any card or button containing terms like “VIP Membership”, “Discount Price”, “Limited Offer”, or showing any price.
+     - Do not click “Claim Now” on benefit cards related to promotional icons such as the “National Centre for the Performing Arts” or any video memberships (e.g., iQIYI, Tencent Video, Bilibili), unless explicitly instructed.
+     - If “Welfare Center” is not immediately visible, carefully check the **top-right corner** of the screen — it may appear as a small icon with a gift box and the label “福利中心”. Tap it if found.
 """
-
-if task.app_name == "联通" and "领取" in task.instruction and "权益" in task.instruction:
-    task.extra_tips += """
-    1. Always prioritize centralized entry points like '福利中心', '我的权益', or '权益专区' before attempting to claim any specific benefit card.If both primary and secondary entry points are present, you must enter the deeper layer (e.g., '我的权益') first.
-    2. Only claim free benefits. Strictly avoid any cards or buttons related to 'VIP会员', '会员价', '限时优惠', '首月特惠', or that show prices. These are considered paid content and must not be selected.
-    3. If paid content is accidentally selected, the action must be canceled or rolled back immediately.
-    4. Do not click 'Claim Now' or any benefit card associated with promotional icons (e.g., '国家大剧院') or video memberships (e.g., 爱奇艺、腾讯视频、哔哩哔哩) unless explicitly instructed.
-    5.If you cannot find the 'Welfare Center' entry, look carefully at the top right corner of the screen. It may appear as a small icon with the text '福利中心' and a gift box graphic. Tap on that icon if visible.
-    6.Do not click 'Claim Now' if it is associated with icons like 'National Centre for the Performing Arts' or other promotional content.
-
-    """
-

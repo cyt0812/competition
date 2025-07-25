@@ -1,13 +1,25 @@
 {
-    "length": 1,
-    "scenario": "LIANTONG_APP_RIGHTS",
-    "scenario_id": 1001,
-    "tasks": [
-        {"instruction": "Open the China Unicom app"},
-        {"instruction": "Click the bottom right corner for Benefits"},
-        {"instruction": "adb_click:550,1741"},
-        {"instruction": "Click the top right corner for Welfare Center"},
-        {"instruction": "Click My Benefits"},
-        {"instruction": "Click Claim"}
-    ]
-} 
+  "length": 1,
+  "scenario": "LIANTONG_APP_RIGHTS",
+  "scenario_id": 1001,
+  "tasks": [
+    {
+      "task_id": "claim_rights",
+      "instruction": "到中国联通的福利中心去领取权益。",
+      "type": "single_app",
+      "apps": [
+        "China Unicom"
+      ],
+      "rubrics": [
+        "打开中国联通App",
+        "进入福利中心",
+        "成功领取一项可用权益"
+      ],
+      "human_references": [
+        "打开中国联通App，图标是红白色的。",
+        "点击底部的“福利中心”入口。",
+        "在福利中心中领取一个免费权益。"
+      ]
+    }
+  ]
+}
