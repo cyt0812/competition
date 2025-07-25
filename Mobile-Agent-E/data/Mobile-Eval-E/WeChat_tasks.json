@@ -1,0 +1,82 @@
+{
+    "length": 3,
+    "scenario": "WeChat",
+    "scenario_id": 0,
+    "tasks": [
+        {
+            "task_id": "WeChat_send_msg",
+            "instruction": "Open WeChat and send the message 'Anything is fine' to the group chat 'ZhouLei'.",
+            "type": "single_app",
+            "apps": [
+                "WeChat"
+            ],
+            "rubrics": [
+                "Opened WeChat app",
+                "Search for the group chat 'ZhouLei' and open it",
+                "Type and send the message 'Anything is fine'"
+            ],
+            "human_reference_operations": [
+                "Opened WeChat app",
+                "Search for the group chat 'ZhouLei' by swip",
+                "open the group chat 'ZhouLei'",
+                "tap the text input box",
+                "type 'Anything is fine'",
+                "tap 'Send'"
+            ]
+        },
+        {
+            "task_id": "WeChat_Moments_post_like",
+            "instruction": "Open WeChat and like a post under a randomly selected friend's Moments post.",
+            "type": "single_app",
+            "apps": [
+                "WeChat"
+            ],
+            "rubrics": [
+                "Opened WeChat app",
+                "Tap the 'Discover' tab",
+                "Tap 'Moments' to enter the Moments feed",
+                "Find a post and tap the comment icon (two dots) to open the like/comment menu",
+                "Tap the 'Like' button (heart icon) to like the post"
+            ],
+            "human_reference_operations": [
+                "Opened WeChat app",
+                "Tap the 'Discover' tab",
+                "Tap 'Moments' to enter the Moments feed",
+                "tap the text input box",
+                "Find a post and tap the comment icon (two dots) to open the like/comment menu",
+                "Tap ...",
+                "Tap the 'Like' button (heart icon) to like the post"
+            ]
+        },
+        {
+            "task_id": "WeChat_Moments_post",
+            "instruction": "Post a WeChat Moment by randomly selecting a photo from the phone gallery, and include a description of at least 20 characters.",
+            "type": "single_app",
+            "apps": [
+                "WeChat"
+            ],
+            "rubrics": [
+                "Opened WeChat app",
+                "Tap the 'Discover' tab",
+                "Tap 'Moments' to enter the Moments feed",
+                "tap the camera icon to start posting a new Moment",
+                "select 'From Album' to choose a photo from the gallery",
+                "randomly select a photo from the gallery",
+                "tap the '完成' (Done) button to confirm the selection",
+                "enter a description of at least 20 characters in the text field",
+                "post the Moment"
+            ],
+            "human_reference_operations": [
+                "Opened WeChat app",
+                "Tap the 'Discover' tab",
+                "Tap 'Moments' to enter the Moments feed",
+                "tap the camera icon to start posting a new Moment",
+                "select 'From Album' to choose a photo from the gallery",
+                "randomly select a photo from the gallery",
+                "tap the '完成' (Done) button to confirm the selection",
+                "enter a description of at least 20 characters in the text field",
+                "post the Moment"
+            ]
+        }
+    ]
+}
