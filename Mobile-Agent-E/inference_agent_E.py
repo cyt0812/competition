@@ -628,7 +628,7 @@ def run_single_task(
                 })
                 with open(log_json_path, "w") as f:
                     json.dump(steps, f, indent=4)
-            return
+                return
         
         ## max repetitive actions stop ##
         if len(info_pool.action_history) >= max_repetitive_actions:
