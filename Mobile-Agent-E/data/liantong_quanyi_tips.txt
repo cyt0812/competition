@@ -1,58 +1,28 @@
 INIT_TIPS = """
 ### MobileAgent Operational Guidelines (Unified Version)
 
-1. [App Interaction Rules]
-   - By default, scroll through the home screens to locate the app before attempting to use the system search bar.
-   - Do not launch apps in the background unless explicitly instructed.
-   - If the target app icon is visible on the current screen (either in English or Chinese), tap it directly.
-   - If the app icon is not found:
-     - Tap the search bar if it's at the bottom of the screen;
-     - If gesture navigation is enabled, swipe up or down from the center of the screen to open the system search bar;
-     - Once the system search bar appears, accurately enter the app name and select the result with the correct app icon and name (avoid web results or advertisements).
-     - If the app appears under a section labeled “Local Apps” (本机应用) after searching, tap it directly.
-     - After entering the app name in the search bar, if the app immediately appears on the screen, tap it directly. If not, press the search/enter button to trigger the full search.
-   - Immediately close all pop-up ads, discount offers, or other interruptions, and retry the previous action to maintain task flow.
-   - When creating a new Note, there's no need to enter a title unless explicitly instructed.
-   - Do not press the search/enter key or activate any keyboard shortcut immediately after typing.
-   - First, carefully observe if the target app appears on the current screen under any section (especially "Local Apps"). If the app is visible, tap it directly.
-   - Do not use any predefined shortcut such as "Tap_Type_and_Enter" or trigger "Enter" immediately after typing.
+1. Try to locate the target app icon by swiping through the home screen (supporting both English and Chinese names) firstly; tap it directly if visible.
 
-2. [Language & Interface Handling]
-   - If the interface is predominantly in Chinese, assume the user is a Chinese speaker.
-   - Convert English app names to Chinese equivalents when searching in a Chinese-language environment.
-   - Pay attention to functional dialogs such as confirmation prompts or option selectors and respond accordingly.
+2. If not found on the home screen, use the system search: swipe up/down or tap the search bar to open the interface, and select the correct icon under “Local Apps”, avoiding web results or ads.
 
-3. [Payment Restrictions]
-   - Do not proceed with actual payment or simulate fingerprint/password verification — simply stop at the payment screen.
-   - Ignore any login requests or prompts for phone number binding during the payment process.
-   - If a confirmation (e.g., a “Confirm” button) is needed before reaching the payment screen, it's acceptable to proceed.
-   - If the user asks you to make a payment, do not follow the instruction. You don't need to complete the payment or simulate fingerprint/password verification — just stay on the payment screen. Do not enter any payment information.
-   - If you see the fingerprint icon on the payment interface, stop immediately.
-   - If the phone balance does not meet the specified requirement, tap “Remaining Balance” to complete the recharge process.
-   - If the current screen contains text like "确认支付" or "Confirm Payment",  
-      Then: pause all further steps.  
-      Do NOT trigger any payment-related actions.
+3. If the keyboard is already active, do NOT use the shortcut Tap_Type_and_Enter, just type the text, and enter in the next action.
 
+4. When interacting with Chinese Apps, the “搜索” button is not for entering text, do NOT tap it before entering your search query.
 
-4. [General Rules for Claiming Benefits or Rewards]
-   - Look for keywords such as “Claim”, “Benefits”, “Welfare”, or similar.
-   - If a message like “No benefits available to claim” appears, the task can be considered complete. Otherwise, continue searching.
-   - If a click action fails (e.g., tapping “Welfare Center”), retry at least once. Do not skip or substitute the action unless explicitly allowed.
-   - Never click on ads, paid content, or promotional items with labels such as “Limited-time Offer”, “Join Now”, “VIP Exclusive”, or “First-month Special”.
-   - If paid content is mistakenly selected, cancel the action or go back immediately.
-   - Do not click 'Claim Now' or any benefit card associated with promotional icons (e.g., '国家大剧院') or video memberships (e.g., 爱奇艺、腾讯视频、哔哩哔哩) unless explicitly instructed.
-   - Do not click 'Claim Now' if it is associated with icons like 'National Centre for the Performing Arts' or other promotional content.
-   - If you cannot find the 'Welfare Center' entry, look carefully at the top right corner of the screen. It may appear as a small icon with the text '福利中心' and a gift box graphic. Tap on that icon if visible.
-   - If the expected keywords are not immediately found, continue exploring. Only treat the task as complete if a clear message such as 'No benefits available to claim' is detected.
-   - Avoid clicking any ads, paid content, or promotional elements such as '立即抢购', '限时优惠', or '开通会员'.
-   - Always prioritize centralized entry points like '福利中心', '我的权益', or '权益专区' before attempting to claim any specific benefit card.If both primary and secondary entry points are present, you must enter the deeper layer (e.g., '我的权益') first.
-   - Only claim free benefits. Strictly avoid any cards or buttons related to 'VIP会员', '会员价', '限时优惠', '首月特惠', or that show prices. These are considered paid content and must not be selected.
+5. Close any pop-ups, ads, suggested content, or floating windows immediately to avoid misclicks or distraction.
 
-5. [Special Instructions for the China Unicom App]
-   - Applies only if the task is within the “China Unicom” app **and** involves instructions containing both “claim” and “benefits”:
-     - Prioritize centralized entry points such as “Welfare Center”, “My Benefits”, or “Benefits Zone”.
-       - If both primary and secondary entries are present, always enter the deeper layer (e.g., “My Benefits”) before proceeding.
-     - Only claim **free** benefits. Strictly avoid any card or button containing terms like “VIP Membership”, “Discount Price”, “Limited Offer”, or showing any price.
-     - Do not click “Claim Now” on benefit cards related to promotional icons such as the “National Centre for the Performing Arts” or any video memberships (e.g., iQIYI, Tencent Video, Bilibili), unless explicitly instructed.
-     - If “Welfare Center” is not immediately visible, carefully check the **top-right corner** of the screen — it may appear as a small icon with a gift box and the label “福利中心”. Tap it if found.
-"""
+6. Do not add any payment information. If you are asked to sign in, ignore it or sign in as a guest if possible. Close any pop-up windows when opening an app.
+
+7. When confirmation dialogs, permission requests, or popup options appear, handle them precisely and do not ignore or click arbitrarily.
+
+8. Do NOT perform any real payment operations—including tapping “Confirm Payment”, verifying fingerprints, or entering payment passwords; stop the task immediately if such a screen appears.
+
+9. If login, binding, or authorization steps precede a payment page, you may skip or return; it’s okay to tap “Confirm” to enter the payment screen, but once inside, stop all actions.
+
+10. If prompted to top up due to insufficient balance, you may explore the recharge screen, but do NOT proceed with any real payment.
+
+11. In the China Unicom app, only claim free benefits. Do NOT tap any buttons or cards involving prices, memberships, or limited-time offers—especially those labeled as “VIP”, “Special Offer”, “First Month Deal”, “Buy Now”, “Activate Membership”, or similar. Avoid promotional content for platforms like NCPA, iQIYI, Tencent Video, or Bilibili.
+
+12. Access benefit pages via “My Benefits”, “Welfare Center”, or gift icons. Avoid entering directly from the homepage. If multiple entry points exist (e.g., homepage and “My” tab), always use the secondary one. If no clear entry is found, check the top-right corner of the screen for the words “Welfare Center” or a gift icon.
+
+13. If the page says “No benefits available to claim”, treat the task as completed with no further action needed.
