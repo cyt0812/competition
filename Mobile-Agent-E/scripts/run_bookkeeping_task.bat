@@ -1,1 +1,0 @@
-python run.py --run_name "bookkeeping" --setting "individual" --instruction "%1" --overwrite_task_log_dir
