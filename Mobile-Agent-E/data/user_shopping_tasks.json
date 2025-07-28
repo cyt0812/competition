@@ -1,0 +1,13 @@
+{
+  "length": 1,
+  "scenario": "shopping",
+  "scenario_id": 0,
+  "tasks": [
+    {
+      "task_id": "taobao_add_3_books",
+      "instruction": "I want to buy a book: Stray Birds. Select 3 different, cost-effective products to add to the shopping cart, and finally open the shopping cart page to view the added products.",
+      "type": "single_app",
+      "apps": ["Taobao"]
+    }
+  ]
+}
