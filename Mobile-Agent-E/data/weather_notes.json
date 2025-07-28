@@ -1,0 +1,27 @@
+{
+    "length": 1,
+    "scenario": "weather_record",
+    "scenario_id": 1,
+    "tasks": [
+        {
+            "task_id": "weather",
+            "instruction": "Go to your browser and search for the weather for the next few days and record it in your notes.",
+            "type": "multi_app",
+            "apps": ["Browser","Notes"],
+            "rubrics": [
+                "Opened Clock app",
+                "Navigated to Timer section",
+                "Set timer for 10 minutes",
+                "Started the timer",
+                "Stopped at the screen showing the running timer"
+            ],
+            "human_reference_operations": [
+                "open clock",
+                "tap on timer tab",
+                "set time to 10 minutes",
+                "tap start",
+                "verify timer is running"
+            ]
+        }
+    ]
+}
