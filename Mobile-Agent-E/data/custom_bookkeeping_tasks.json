@@ -21,7 +21,5 @@
         "Tap 'Save' or confirm to finish recording the transaction."
       ]
     }
-  ],
-  "type": "single_app",
-  "apps": ["SuiShouJi"]
+  ]
 }
