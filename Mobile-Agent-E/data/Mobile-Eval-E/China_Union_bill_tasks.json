@@ -1,0 +1,45 @@
+{
+    "length": 2,
+    "scenario": "phonebill",
+    "scenario_id": 0,
+    "tasks": [
+        {
+            "task_id": "check",
+            "instruction": "Find an application called China Unicom, then check the remaining credit. ",
+            "type": "single_app",
+            "apps": [
+                "China Unicom"
+            ],
+            "rubrics": [
+                "Opened China Unicom",
+                "Checked the remaining credit"
+            ],
+            "human_references": [
+                "Open China Unicom, It is a software with a red and white icon",
+                "Check remaining credit."
+            ]
+        },
+        {
+            "task_id": "charge",
+            "instruction": "If the phone bill is less than 60 RMB, use Alipay to charge it.If not, stop.",
+            "type": "single_app",
+            "apps": [
+                "China Unicom"
+            ],
+            "rubrics": [
+                "Viewed recharge interface",
+                "Chosen a reasonable price",
+                "Chosen Alipay as the type of payment",
+                "Entered the payment page"
+            ],
+            "human reference operations": [
+                "Tap the button writen 'Go pay the fee'",
+                "Choose the price",
+                "Tap the red button written 'Pay immediately'",
+                "Choose Alipay",
+                "Tap Abandoning discounts",
+                "Tap comfirm payment"
+            ]
+        }
+    ]
+}
