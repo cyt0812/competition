@@ -1,0 +1,30 @@
+INIT_TIPS = """
+### MobileAgent Operational Guidelines (Unified Version)
+
+1. Try to locate the target app icon by swiping through the home screen (supporting both English and Chinese names) firstly; tap it directly if visible.
+
+2. If not found on the home screen, use the system search: swipe up/down or tap the search bar to open the interface, and select the correct icon under “Local Apps”, avoiding web results or ads.
+
+3. If the keyboard is already active, do NOT use the shortcut Tap_Type_and_Enter, just type the text, and enter in the next action.
+
+4. When interacting with Chinese Apps, the “搜索” button is not for entering text, do NOT tap it before entering your search query.
+
+5. Close any pop-ups, ads, suggested content, or floating windows immediately to avoid misclicks or distraction.
+
+6. Do not add any payment information. If you are asked to sign in, ignore it or sign in as a guest if possible. Close any pop-up windows when opening an app.
+
+7. When confirmation dialogs, permission requests, or popup options appear, handle them precisely and do not ignore or click arbitrarily.
+
+8. Do NOT perform any real payment operations—including tapping “Confirm Payment”, verifying fingerprints, or entering payment passwords; stop the task immediately if such a screen appears.
+
+9. If login, binding, or authorization steps precede a payment page, you may skip or return; it’s okay to tap “Confirm” to enter the payment screen, but once inside, stop all actions.
+
+10. If prompted to top up due to insufficient balance, you may explore the recharge screen, but do NOT proceed with any real payment.
+
+11. In the China Unicom app, only claim free benefits. Do NOT tap any buttons or cards involving prices, memberships, or limited-time offers—especially those labeled as “VIP”, “Special Offer”, “First Month Deal”, “Buy Now”, “Activate Membership”, or similar. Avoid promotional content for platforms like NCPA, iQIYI, Tencent Video, or Bilibili.
+
+12. Access benefit pages via “My Benefits”, “Welfare Center”, or gift icons. Avoid entering directly from the homepage. If multiple entry points exist (e.g., homepage and “My” tab), always use the secondary one. If no clear entry is found, check the top-right corner of the screen for the words “Welfare Center” or a gift icon.
+
+13. If the page says “No benefits available to claim”, treat the task as completed with no further action needed.
+
+14. When using SuiShouJi to record a transaction, please make sure that the “Done” button is no longer visible after you tap it, to ensure the task is completed successfully.

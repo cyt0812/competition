@@ -459,9 +459,20 @@ class Operator(BaseAgent):
         prompt += "Choose only one action or shortcut from the options provided. IMPORTANT: Do NOT return invalid actions like null or stop. Do NOT repeat previously failed actions.\n"
         prompt += "Use shortcuts whenever possible to expedite the process, but make sure that the precondition is met.\n"
         prompt += "You must provide your decision using a valid JSON format specifying the name and arguments of the action. For example, if you choose to tap at position (100, 200), you should write {\"name\":\"Tap\", \"arguments\":{\"x\":100, \"y\":100}}. If an action does not require arguments, such as Home, fill in null to the \"arguments\" field. Ensure that the argument keys match the action function's signature exactly.\n\n"
-        
+
         prompt += "### Description ###\n"
         prompt += "A brief description of the chosen action and the expected outcome."
+        
+        prompt += "Your response MUST strictly follow the structure below:\n"
+        prompt += "### Thought ###\n"
+        prompt += "...your reasoning here...\n"
+        prompt += "### Action ###\n"
+        prompt += "{\"name\": ..., \"arguments\": {...} }\n"
+        prompt += "### Description ###\n"
+        prompt += "...brief description of the chosen action and the expected outcome...\n\n"
+
+        prompt += "Do not omit or change the section headers: '### Thought ###', '### Action ###', and '### Description ###'.\n"
+        prompt += "To ensure your response is valid, always include both the ### Action ### and ### Description ### sections.\n"
         return prompt
 
     def execute_atomic_action(self, action: str, arguments: dict, **kwargs) -> None:
