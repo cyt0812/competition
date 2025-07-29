@@ -147,8 +147,10 @@ class InfoPool:
     shortcuts: dict = field(default_factory=dict)
 
     # Perception
+    #width: int = 1080
+    #height: int = 2340
     width: int = 1080
-    height: int = 2340
+    height: int = 2280
     perception_infos_pre: list = field(default_factory=list) # List of clickable elements pre action
     keyboard_pre: bool = False # keyboard status pre action
     perception_infos_post: list = field(default_factory=list) # List of clickable elements post action

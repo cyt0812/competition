@@ -1,1 +1,1 @@
-python run.py --run_name "testing" --setting "individual" --instruction "Open WeChat and send the message 'Anything is fine' to the group chat 'ZhouLei'."
+python run.py --run_name "testing" --setting "individual" --instruction "Open WeChat and send the message 'Anything is fine' to the group chat 'ZhouLei、'"

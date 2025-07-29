@@ -6,6 +6,12 @@ import shutil
 from PIL import Image, ImageDraw
 from time import sleep
 
+# 确保截图目录存在
+os.makedirs('./screenshot', exist_ok=True)
+# 使用绝对路径
+abs_path = os.path.abspath('./screenshot/screenshot.png')
+print(f"截图将保存到：{abs_path}")
+
 from MobileAgentE.api import inference_chat
 from MobileAgentE.text_localization import ocr
 from MobileAgentE.icon_localization import det
@@ -35,8 +41,8 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 ADB_PATH = os.environ.get("ADB_PATH", default="adb")
 
 ## Reasoning model configs
-BACKBONE_TYPE = os.environ.get("BACKBONE_TYPE", default="OpenAI") # "OpenAI" or "Gemini" or "Claude"
-assert BACKBONE_TYPE in ["OpenAI", "Gemini", "Claude"], "Unknown BACKBONE_TYPE"
+BACKBONE_TYPE = os.environ.get("BACKBONE_TYPE", default="Qwen") # "OpenAI" or "Gemini" or "Claude" or "Qwen"
+assert BACKBONE_TYPE in ["OpenAI", "Gemini", "Claude", "Qwen"], "Unknown BACKBONE_TYPE"
 print("### Using BACKBONE_TYPE:", BACKBONE_TYPE)
 
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
@@ -57,6 +63,9 @@ elif BACKBONE_TYPE == "Gemini":
 elif BACKBONE_TYPE == "Claude":
     REASONING_MODEL = "claude-3-5-sonnet-20241022"
     KNOWLEDGE_REFLECTION_MODEL = "claude-3-5-sonnet-20241022"
+elif BACKBONE_TYPE == "Qwen":
+    REASONING_MODEL = "qwen-plus"
+    KNOWLEDGE_REFLECTION_MODEL = "qwen-plus"
 
 ## you can specify a jsonl file path for tracking API usage
 USAGE_TRACKING_JSONL = None # e.g., usage_tracking.jsonl
@@ -68,7 +77,13 @@ CAPTION_CALL_METHOD = "api"
 CAPTION_MODEL = "qwen-vl-plus"
 
 QWEN_API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
-QWEN_API_KEY = os.environ.get("QWEN_API_KEY", default=None)
+# 从环境变量获取API密钥
+QWEN_API_KEY = os.environ.get("DASHSCOPE_API_KEY", default=None)
+print(f"QWEN_API_KEY的值: {QWEN_API_KEY}")
+# 确保API密钥被正确设置
+if not QWEN_API_KEY:
+    print("警告: QWEN_API_KEY未从环境变量获取! 使用硬编码密钥作为备用...")
+    QWEN_API_KEY = 'sk-b8cb5b51cfb54dd483cb5329c7ea0b42'
 
 
 ## Initial Tips provided by user; You can add additional custom tips ###
@@ -124,7 +139,21 @@ def generate_local(tokenizer, model, image_file, query):
 
 
 def process_image(image, query, caption_model=CAPTION_MODEL):
-    dashscope.api_key = QWEN_API_KEY
+    # 确保os模块已导入
+    import os
+    
+    # 获取并打印API密钥（用于调试）
+    api_key = os.environ.get('DASHSCOPE_API_KEY')
+    print(f"从环境变量获取的API密钥: {api_key}")
+    print(f"环境变量是否存在: {'DASHSCOPE_API_KEY' in os.environ}")
+    
+    # 设置API密钥
+    dashscope.api_key = api_key
+    
+    # 验证API密钥是否已设置
+    if not dashscope.api_key:
+        print("警告: API密钥未设置! 使用硬编码密钥作为备用...")
+        dashscope.api_key = 'sk-b8cb5b51cfb54dd483cb5329c7ea0b42'
     image = "file://" + image
     messages = [{
         'role': 'user',
@@ -326,7 +355,7 @@ class Perceptor:
             images = sorted(images, key=lambda x: int(x.split('/')[-1].split('.')[0]))
             image_id = [int(image.split('/')[-1].split('.')[0]) for image in images]
             icon_map = {}
-            prompt = 'This image is an icon from a phone screen. Please briefly describe the shape and color of this icon in one sentence.'
+            prompt = 'This image is an icon from a phone screen. Please briefly describe the shape and color of this icon in one sentence.Make sure to include all symbols exactly as they appear, such as "--".'
             if CAPTION_CALL_METHOD == "local":
                 for i in range(len(images)):
                     image_path = os.path.join(temp_file, images[i])
@@ -385,6 +414,8 @@ def get_reasoning_model_api_response(chat, model_type=BACKBONE_TYPE, model=None,
         return inference_chat(chat, model, GEMINI_API_URL, GEMINI_API_KEY, usage_tracking_jsonl=USAGE_TRACKING_JSONL, temperature=temperature)
     elif model_type == "Claude":
         return inference_chat(chat, model, CLAUDE_API_URL, CLAUDE_API_KEY, usage_tracking_jsonl=USAGE_TRACKING_JSONL, temperature=temperature)
+    elif model_type == "Qwen":
+        return inference_chat(chat, model, QWEN_API_URL, QWEN_API_KEY, usage_tracking_jsonl=USAGE_TRACKING_JSONL, temperature=temperature)
     else:
         raise ValueError(f"Unknown model type: {model_type}")
     
