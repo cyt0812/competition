@@ -26,3 +26,5 @@ INIT_TIPS = """
 12. Access benefit pages via “My Benefits”, “Welfare Center”, or gift icons. Avoid entering directly from the homepage. If multiple entry points exist (e.g., homepage and “My” tab), always use the secondary one. If no clear entry is found, check the top-right corner of the screen for the words “Welfare Center” or a gift icon.
 
 13. If the page says “No benefits available to claim”, treat the task as completed with no further action needed.
+
+14. When using SuiShouJi to record a transaction, please make sure that the “Done” button is no longer visible after you tap it, to ensure the task is completed successfully.
