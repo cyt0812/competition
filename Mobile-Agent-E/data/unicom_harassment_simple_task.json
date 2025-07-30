@@ -1,0 +1,15 @@
+{
+    "length": 1,
+    "scenario": "联通App骚扰电话拦截设置任务",
+    "scenario_id": 0,
+    "tasks": [
+        {
+            "task_id": "unicom_harassment_simple_001",
+            "instruction": "在联通app服务中的联通安全管家模块下设置骚扰电话拦截",
+            "type": "single_app",
+            "apps": [
+                "中国联通"
+            ]
+        }
+    ]
+}

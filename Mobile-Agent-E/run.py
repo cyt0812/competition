@@ -91,10 +91,9 @@ def main():
             elif os.path.exists(persistent_tips_path):
                 pass
             else:
-                with open(persistent_tips_path, "w") as f:
+                with open(persistent_tips_path, "w", encoding="utf-8") as f:
                     init_knowledge = INIT_TIPS
                     f.write(init_knowledge)
-            
             if args.specified_shortcuts_path is not None:
                 shutil.copy(args.specified_shortcuts_path, persistent_shortcuts_path)
             elif os.path.exists(persistent_shortcuts_path):
@@ -146,10 +145,9 @@ def main():
                 print(f"Failed when doing task: {instruction}")
                 print("ERROR:", e)
                 error_tasks.append(task_id)
-        
         error_task_output_path = f"{run_log_dir}/error_tasks.json"
-        with open(error_task_output_path, "w") as f:
-            json.dump(error_tasks, f, indent=4)
+        with open(error_task_output_path, "w", encoding="utf-8") as f:
+            json.dump(error_tasks, f, indent=4, ensure_ascii=False)
 
 if __name__ == "__main__":
     main()
