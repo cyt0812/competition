@@ -27,7 +27,7 @@ INIT_TIPS = """
 
 13. If the page says "No benefits available to claim", treat the task as completed with no further action needed.
 
-14.联通安全管家在联通主页底部的服务中 想要进入请先点击服务再滑动来找到联通安全管家.
+14. China Unicom Security Manager is located in the Services section at the bottom of the Unicom homepage. To access it, first tap "Services" and then swipe to find China Unicom Security Manager.
 
 15.If there is a "Select All" option on the page and it aligns with your objective, click "Select All" directly instead of clicking modules individually.
 
