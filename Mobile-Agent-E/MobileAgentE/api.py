@@ -35,6 +35,10 @@ def track_usage(res_json, api_key):
         elif "claude" in model:
             prompt_token_price = (3 / 1000000) * prompt_tokens
             completion_token_price = (15 / 1000000) * completion_tokens
+        elif "qwen" in model:
+            # 千问模型的价格配置，根据实际API定价调整
+            prompt_token_price = (2.0 / 1000000) * prompt_tokens
+            completion_token_price = (6.0 / 1000000) * completion_tokens
     return {
         # "api_key": api_key, # remove for better safety
         "id": res_json['id'] if "id" in res_json else None,

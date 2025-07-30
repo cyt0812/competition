@@ -1,0 +1,15 @@
+{
+    "length": 1,
+    "scenario": "China Unicom App Spam Call Blocking Setup Task",
+    "scenario_id": 0,
+    "tasks": [
+        {
+            "task_id": "unicom_harassment_simple_001",
+            "instruction": "Set up spam call blocking in the China Unicom Security Manager module under the services section of the Unicom app",
+            "type": "single_app",
+            "apps": [
+                "China Unicom"
+            ]
+        }
+    ]
+}
