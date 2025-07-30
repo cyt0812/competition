@@ -1,0 +1,31 @@
+{
+    "length": 1,
+    "scenario": "weather_notes",
+    "scenario_id": 0,
+    "tasks": [
+        {
+            "task_id": "weather",
+            "instruction": "Go to your browser and search for the weather for the next few days and record it in Notes.",
+            "type": "multi_app",
+            "apps": ["Browser","Notes"],
+            "rubrics": [
+                "Opened Browser app",
+                "Searched for 'weather'",
+                "Read and remember the weather forecast for the next few days from the search results",
+                "Opened Notes app",
+                "Created a new note in Notes",
+                "Wrote the weather forecast for the next few days you just found into the new note",
+                "Saved the new note"
+            ],
+            "human_reference_operations": [
+                "open browser",
+                "search for weather",
+                "read and remember weather forecast",
+                "open notes",
+                "create new note",
+                "write weather forecast into note",
+                "save note"
+            ]
+        }
+    ]
+}
