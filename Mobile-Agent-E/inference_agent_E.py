@@ -48,8 +48,7 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", default=None)
 CLAUDE_API_URL = "https://api.anthropic.com/v1/messages"
 CLAUDE_API_KEY = os.environ.get("CLAUDE_API_KEY", default=None)
 
-# 添加千问模型配置
-QWEN_API_KEY = os.environ.get("QWEN_API_KEY", default=None)
+
 
 if BACKBONE_TYPE == "OpenAI":
     REASONING_MODEL = "gpt-4o-2024-11-20"

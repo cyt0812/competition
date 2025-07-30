@@ -95,7 +95,7 @@ Please refer to the `# Edit your Setting #` section in `inference_agent_E.py` fo
     ```
     ```
     export BACKBONE_TYPE="Qwen"
-    export QWEN_REASONING_API_KEY="your-qwen-api-key"
+    export QWEN_API_KEY="your-qwen-api-key"
     ```
 3. Perceptor: By default, the icon captioning model (`CAPTION_MODEL`) in Perceptor uses "qwen-vl-plus" from Qwen API:
     - Follow this to get an [Qwen API Key](https://help.aliyun.com/document_detail/2712195.html?spm=a2c4g.2712569.0.0.5d9e730aymB3jH) 
