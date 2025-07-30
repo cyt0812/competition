@@ -1,0 +1,86 @@
+[
+    {
+        "step": 0,
+        "operation": "init",
+        "instruction": "\u8bfb\u53d6\u8054\u901a\u5b89\u5168\u7ba1\u5bb6\u6a21\u5757\u4e0b\u7684\u7535\u8bdd\u62e6\u622a\u6b21\u6570\u3001\u53cd\u8bc8\u63d0\u9192\u6b21\u6570\u3001\u7535\u8bdd\u4ee3\u63a5\u6b21\u6570\u3001\u8425\u9500\u77ed\u4fe1\u62e6\u622a\u6b21\u6570",
+        "task_id": "unicom_security_guard_stats",
+        "run_name": "unicom_test",
+        "max_itr": 40,
+        "max_consecutive_failures": 5,
+        "max_repetitive_actions": 5,
+        "future_tasks": [],
+        "log_root": "logs/gemini-2.5-pro/mobile_agent_E",
+        "tips_path": null,
+        "shortcuts_path": null,
+        "persistent_tips_path": "logs/gemini-2.5-pro/mobile_agent_E/unicom_test\\persistent_tips.txt",
+        "persistent_shortcuts_path": "logs/gemini-2.5-pro/mobile_agent_E/unicom_test\\persistent_shortcuts.json",
+        "perception_args": {
+            "device": "cuda",
+            "caption_call_method": "api",
+            "caption_model": "qwen-vl-plus",
+            "groundingdino_model": "AI-ModelScope/GroundingDINO",
+            "groundingdino_revision": "v1.0.0",
+            "ocr_detection_model": "iic/cv_resnet18_ocr-detection-db-line-level_damo",
+            "ocr_recognition_model": "iic/cv_convnextTiny_ocr-recognition-document_damo"
+        },
+        "init_info_pool": {
+            "instruction": "\u8bfb\u53d6\u8054\u901a\u5b89\u5168\u7ba1\u5bb6\u6a21\u5757\u4e0b\u7684\u7535\u8bdd\u62e6\u622a\u6b21\u6570\u3001\u53cd\u8bc8\u63d0\u9192\u6b21\u6570\u3001\u7535\u8bdd\u4ee3\u63a5\u6b21\u6570\u3001\u8425\u9500\u77ed\u4fe1\u62e6\u622a\u6b21\u6570",
+            "tips": "0. Do not add any payment information. If you are asked to sign in, ignore it or sign in as a guest if possible. Close any pop-up windows when opening an app.\n1. By default, no APPs are opened in the background.\n2. Screenshots may show partial text in text boxes from your previous input; this does not count as an error.\n3. When creating new Notes, you do not need to enter a title unless the user specifically requests it.\n",
+            "shortcuts": {
+                "Tap_Type_and_Enter": {
+                    "name": "Tap_Type_and_Enter",
+                    "arguments": [
+                        "x",
+                        "y",
+                        "text"
+                    ],
+                    "description": "Tap an input box at position (x, y), Type the \"text\", and then perform the Enter operation. Very useful for searching and sending messages!",
+                    "precondition": "There is a text input box on the screen with no previously entered content.",
+                    "atomic_action_sequence": [
+                        {
+                            "name": "Tap",
+                            "arguments_map": {
+                                "x": "x",
+                                "y": "y"
+                            }
+                        },
+                        {
+                            "name": "Type",
+                            "arguments_map": {
+                                "text": "text"
+                            }
+                        },
+                        {
+                            "name": "Enter",
+                            "arguments_map": {}
+                        }
+                    ]
+                }
+            },
+            "width": 1080,
+            "height": 2280,
+            "perception_infos_pre": [],
+            "keyboard_pre": false,
+            "perception_infos_post": [],
+            "keyboard_post": false,
+            "summary_history": [],
+            "action_history": [],
+            "action_outcomes": [],
+            "error_descriptions": [],
+            "last_summary": "",
+            "last_action": "",
+            "last_action_thought": "",
+            "important_notes": "",
+            "error_flag_plan": false,
+            "error_description_plan": false,
+            "plan": "",
+            "progress_status": "",
+            "progress_status_history": [],
+            "finish_thought": "",
+            "current_subgoal": "",
+            "prev_subgoal": "",
+            "err_to_manager_thresh": 2,
+            "future_tasks": []
+        }
+    }
+]

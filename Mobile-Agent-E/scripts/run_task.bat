@@ -1,1 +1,1 @@
-python run.py --run_name "testing" --setting "individual" --instruction "到中国联通的福利中心去领取权益"
+python run.py --run_name "testing" --setting "individual" --instruction "Open WeChat and send the message 'Anything is fine' to the group chat 'ZhouLei'."
