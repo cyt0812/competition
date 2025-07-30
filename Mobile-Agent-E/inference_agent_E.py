@@ -49,7 +49,7 @@ CLAUDE_API_URL = "https://api.anthropic.com/v1/messages"
 CLAUDE_API_KEY = os.environ.get("CLAUDE_API_KEY", default=None)
 
 # 添加千问模型配置
-QWEN_REASONING_API_KEY = os.environ.get("QWEN_API_KEY", default=None)
+QWEN_API_KEY = os.environ.get("QWEN_API_KEY", default=None)
 
 if BACKBONE_TYPE == "OpenAI":
     REASONING_MODEL = "gpt-4o-2024-11-20"
@@ -417,7 +417,7 @@ def get_reasoning_model_api_response(chat, model_type=BACKBONE_TYPE, model=None,
     elif model_type == "Claude":
         return inference_chat(chat, model, CLAUDE_API_URL, CLAUDE_API_KEY, usage_tracking_jsonl=USAGE_TRACKING_JSONL, temperature=temperature)
     elif model_type == "Qwen":
-        return inference_chat(chat, model, QWEN_API_URL, QWEN_REASONING_API_KEY, usage_tracking_jsonl=USAGE_TRACKING_JSONL, temperature=temperature)
+        return inference_chat(chat, model, QWEN_API_URL, QWEN_API_KEY, usage_tracking_jsonl=USAGE_TRACKING_JSONL, temperature=temperature)
     else:
         raise ValueError(f"Unknown model type: {model_type}")
     
