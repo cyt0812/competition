@@ -1,1 +1,0 @@
-{"tasks":[{"instruction":"打开联通app，登录后在首页底部导航栏找到并点击\"服务\"选项进入服务大厅，然后往下滑找到联通安全管家模块（无需在搜索栏中搜索），获取电话拦截次数、营销短信拦截次数","task_id":"unicom_security_guard_stats","priority":"high","max_attempts":3,"timeout":120}]}
