@@ -1,0 +1,28 @@
+{
+    "length": 1,
+    "scenario": "chinaunicom_task",
+    "scenario_id": 2,
+    "tasks": [
+        {
+             "task_id": "chinaunicom_task",
+            "instruction": "Find an application called China Unicom, then check the detailed sub-bill of expense items.",
+            "type": "single_app",
+            "apps": [
+                "China Unicom"
+            ],
+            "rubrics": [
+                "Opened China Unicom",
+                "Navigated to the 'My Bill' page",
+                "Found and expanded the detailed sub-bill."
+
+
+            ],
+            "human_references": [
+                "Open China Unicom, It is a software with a red and white icon",
+                "After clicking the bill-checking option in the \"Service\" section, navigate to the detailed sub-bill page to view itemized details",
+                "Clicked on the account."
+
+            ]
+        }
+    ]
+}
