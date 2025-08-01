@@ -1,6 +1,6 @@
-
 import dashscope
 import os
+
 dashscope.api_key = 'sk-b8cb5b51cfb54dd483cb5329c7ea0b42'
 from inference_agent_E import run_single_task
 from inference_agent_E import Perceptor, DEFAULT_PERCEPTION_ARGS, ADB_PATH, INIT_TIPS, INIT_SHORTCUTS, REASONING_MODEL
@@ -12,6 +12,7 @@ import shutil
 import time
 import logging
 
+
 # 获取截图目录（优先级：环境变量 > 默认值）
 def get_screenshot_dir():
     env_dir = os.getenv('MOBILE_AGENT_SCREENSHOT_DIR')
@@ -19,13 +20,15 @@ def get_screenshot_dir():
         # 确保目录存在
         os.makedirs(env_dir, exist_ok=True)
         return env_dir
-    
+
     # 默认路径 - 使用绝对路径
     default_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'screenshot')
     os.makedirs(default_dir, exist_ok=True)
     return default_dir
 
+
 screenshot_path = os.path.join(get_screenshot_dir(), 'screenshot.png')
+
 
 def main():
     import argparse
@@ -56,7 +59,7 @@ def main():
         raise ValueError("You must provide either instruction or tasks_json.")
     if args.instruction is not None and args.tasks_json is not None:
         raise ValueError("You cannot provide both instruction and tasks_json.")
-    
+
     default_perceptor_args = DEFAULT_PERCEPTION_ARGS
     # run inference
     if args.instruction is not None:
@@ -92,10 +95,10 @@ def main():
             tasks = task_json
 
         perceptor = Perceptor(ADB_PATH, perception_args=default_perceptor_args)
-        
+
         run_log_dir = f"{args.log_root}/{args.run_name}"
         os.makedirs(run_log_dir, exist_ok=True)
-        
+
         if args.setting == "individual":
             ## invidual setting ##
             persistent_tips_path = None
@@ -123,12 +126,12 @@ def main():
                     json.dump(INIT_SHORTCUTS, f, indent=4)
         else:
             raise ValueError("Invalid setting:", args.setting)
-        
+
         error_tasks = []
         print(f"INFO: Running tasks from {args.tasks_json} using {args.setting} setting ...")
         for i, task in enumerate(tasks):
             ## if future tasks are visible, specify them in the args ##
-            future_tasks = [t['instruction'] for t in tasks[i+1:]]
+            future_tasks = [t['instruction'] for t in tasks[i + 1:]]
 
             print("\n\n### Running on task:", task["instruction"])
             print("\n\n")
@@ -169,6 +172,7 @@ def main():
         with open(error_task_output_path, "w", encoding="utf-8") as f:
             json.dump(error_tasks, f, indent=4, ensure_ascii=False)
 
+
 def load_config(config_path):
     try:
         with open(config_path, 'r', encoding='utf-8') as f:
@@ -178,10 +182,10 @@ def load_config(config_path):
         print(f"❌ 配置加载失败: {str(e)}")
         raise
 
+
 # 设置日志记录
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     main()
-
