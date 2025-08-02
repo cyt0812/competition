@@ -1,11 +1,19 @@
 import dashscope
 import os
+import sys
+import io
+
+# ─── 防止 Windows 控制台 GBK 编码错误 ─────────────────────────────────────
+# 将 stdout/stderr 强制设置为 UTF-8 编码，并在遇到无法编码的字符时替换
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+# ────────────────────────────────────────────────────────────────────────────
 
 dashscope.api_key = 'sk-b8cb5b51cfb54dd483cb5329c7ea0b42'
 from inference_agent_E import run_single_task
 from inference_agent_E import Perceptor, DEFAULT_PERCEPTION_ARGS, ADB_PATH, INIT_TIPS, INIT_SHORTCUTS, REASONING_MODEL
 import torch
-import sys
+import sys as _sys  # 避免与上面 sys 冲突
 from pathlib import Path
 import json
 import shutil
@@ -100,28 +108,23 @@ def main():
         os.makedirs(run_log_dir, exist_ok=True)
 
         if args.setting == "individual":
-            ## invidual setting ##
+            ## individual setting ##
             persistent_tips_path = None
             persistent_shortcuts_path = None
 
         elif args.setting == "evolution":
-            ## evolution setting: tasks share a persistent long-term memory with continue updating tips and shortcuts ##
+            ## evolution setting ##
             persistent_tips_path = os.path.join(run_log_dir, "persistent_tips.txt")
             persistent_shortcuts_path = os.path.join(run_log_dir, "persistent_shortcuts.json")
 
             if args.specified_tips_path is not None:
                 shutil.copy(args.specified_tips_path, persistent_tips_path)
-            elif os.path.exists(persistent_tips_path):
-                pass
-            else:
+            elif not os.path.exists(persistent_tips_path):
                 with open(persistent_tips_path, "w", encoding="utf-8") as f:
-                    init_knowledge = INIT_TIPS
-                    f.write(init_knowledge)
+                    f.write(INIT_TIPS)
             if args.specified_shortcuts_path is not None:
                 shutil.copy(args.specified_shortcuts_path, persistent_shortcuts_path)
-            elif os.path.exists(persistent_shortcuts_path):
-                pass
-            else:
+            elif not os.path.exists(persistent_shortcuts_path):
                 with open(persistent_shortcuts_path, "w") as f:
                     json.dump(INIT_SHORTCUTS, f, indent=4)
         else:
@@ -130,16 +133,13 @@ def main():
         error_tasks = []
         print(f"INFO: Running tasks from {args.tasks_json} using {args.setting} setting ...")
         for i, task in enumerate(tasks):
-            ## if future tasks are visible, specify them in the args ##
             future_tasks = [t['instruction'] for t in tasks[i + 1:]]
 
             print("\n\n### Running on task:", task["instruction"])
             print("\n\n")
             instruction = task["instruction"]
-            if "task_id" in task:
-                task_id = task["task_id"]
-            else:
-                task_id = args.tasks_json.split("/")[-1].split(".")[0] + f"_{args.setting}" + f"_{i}"
+            task_id = task.get("task_id",
+                               args.tasks_json.split("/")[-1].split(".")[0] + f"_{args.setting}_{i}")
             try:
                 run_single_task(
                     instruction,
