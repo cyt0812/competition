@@ -27,6 +27,7 @@ import dashscope
 import concurrent
 import json
 from dataclasses import dataclass, field, asdict
+import subprocess
 
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -489,6 +490,8 @@ def run_single_task(
 
     steps = []
     task_start_time = time.time()
+    
+
 
     ## additional retrieval step before starting the task for selecting relevant tips and shortcuts ##
     if enable_experience_retriever:
@@ -579,6 +582,26 @@ def run_single_task(
     action_reflector = ActionReflector()
     exp_reflector_shortcuts = ExperienceReflectorShortCut()
     exp_reflector_tips = ExperienceReflectorTips()
+
+## 获取手机分辨率
+    try:
+        adb_command = [ADB_PATH, 'shell', 'wm', 'size']
+        result = subprocess.run(adb_command, capture_output=True, text=True)
+        output = result.stdout.strip()
+        
+        if output.startswith('Physical size:'):
+            resolution_str = output.split(': ')[1]  # 提取 "1080x2340"
+            width, height = map(int, resolution_str.split('x'))  # 拆分为整数
+            print(f"INFO: 手机分辨率为: {width}x{height}")
+            
+            # 关键：将宽高赋值给业务逻辑中使用的对象（以 InfoPool 为例）
+            info_pool.width = width  
+            info_pool.height = height  
+            
+        else:
+            print("INFO: 未能成功获取手机分辨率。")
+    except Exception as e:
+        print(f"ERROR: 获取手机分辨率时出现错误: {e}")
 
     # save initial tips and shortcuts
     with open(local_tips_save_path, "w") as f:
