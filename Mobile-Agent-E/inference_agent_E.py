@@ -6,11 +6,6 @@ import shutil
 from PIL import Image, ImageDraw
 from time import sleep
 
-# 确保截图目录存在
-os.makedirs('./screenshot', exist_ok=True)
-# 使用绝对路径
-abs_path = os.path.abspath('./screenshot/screenshot.png')
-print(f"截图将保存到：{abs_path}")
 
 from MobileAgentE.api import inference_chat
 from MobileAgentE.text_localization import ocr
@@ -160,12 +155,7 @@ def generate_local(tokenizer, model, image_file, query):
 
 
 def process_image(image, query, caption_model=CAPTION_MODEL):
-    # 确保os模块已导入
-    import os
-
-    def process_image(image, query, caption_model=CAPTION_MODEL):
-        dashscope.api_key = QWEN_API_KEY
-
+    dashscope.api_key = QWEN_API_KEY
     image = "file://" + image
     messages = [{
         'role': 'user',

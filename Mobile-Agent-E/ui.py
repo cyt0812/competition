@@ -156,6 +156,11 @@ st.markdown('</div>', unsafe_allow_html=True)
 # 侧边栏
 with st.sidebar:
     st.header("🕘 历史对话")
+    #✅ 初始化 (必须放在最前面)
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    # 显示历史记录
     if st.session_state.messages:
         for msg in st.session_state.messages:
             role = "👤 用户" if msg["role"] == "user" else "🤖 助手"
@@ -163,12 +168,17 @@ with st.sidebar:
             st.markdown(f"**{role}:**\n\n{content[:100]}{'...' if len(content) > 100 else ''}")
     else:
         st.info("暂无对话记录")
+
+    # 添加清空按钮
     if st.button("🧹 清空记录"):
         st.session_state.messages = []
+
+    # 添加ADB测试按钮到侧栏
     st.write("**运行前请先点击ADB测试按钮↓**")
+    command_adb = "adb devices"
     if st.button("📱 ADB测试"):
         try:
-            result = subprocess.check_output("adb devices", shell=True, text=True)
+            result = subprocess.check_output(command_adb, shell=True, text=True)
             device_num = result.count("device") - 1
             if device_num:
                 lines = result.strip().split("\n")[1:]
@@ -193,7 +203,7 @@ with mode_task_cols[0]:
     st.markdown("<div style='height: 38px;'></div>", unsafe_allow_html=True)
 with mode_task_cols[1]:
     bill_clicked = st.button(
-        "话费充值",
+        "联通话费充值",
         key="bill_btn",
         disabled=st.session_state.input_disabled,
         help="余额低于60元时充值",
@@ -225,7 +235,7 @@ with input_cols[0]:
     user_text = st.text_input(
         "",
         key="custom_input",
-        placeholder="请输入任务指令，例如：打开微信并发送一条消息",
+        placeholder="请输入任务指令，例如：用微信发送信息“你好”给联系人XXX",
         disabled=st.session_state.input_disabled or st.session_state.voice_active,
         label_visibility="collapsed",
     )

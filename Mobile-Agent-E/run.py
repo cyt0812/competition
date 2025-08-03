@@ -113,7 +113,7 @@ def main():
             persistent_shortcuts_path = None
 
         elif args.setting == "evolution":
-            ## evolution setting ##
+            ## evolution setting: tasks share a persistent long-term memory with continue updating tips and shortcuts##
             persistent_tips_path = os.path.join(run_log_dir, "persistent_tips.txt")
             persistent_shortcuts_path = os.path.join(run_log_dir, "persistent_shortcuts.json")
 
@@ -133,13 +133,16 @@ def main():
         error_tasks = []
         print(f"INFO: Running tasks from {args.tasks_json} using {args.setting} setting ...")
         for i, task in enumerate(tasks):
+            ## if future tasks are visible, specify them in the args ##
             future_tasks = [t['instruction'] for t in tasks[i + 1:]]
 
             print("\n\n### Running on task:", task["instruction"])
             print("\n\n")
             instruction = task["instruction"]
-            task_id = task.get("task_id",
-                               args.tasks_json.split("/")[-1].split(".")[0] + f"_{args.setting}_{i}")
+            if "task_id" in task:
+                task_id = task["task_id"]
+            else:
+                task_id = args.tasks_json.split("/")[-1].split(".")[0] + f"_{args.setting}" + f"_{i}"
             try:
                 run_single_task(
                     instruction,
