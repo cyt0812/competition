@@ -1,11 +1,31 @@
 
+import dashscope
+import os
+dashscope.api_key = 'sk-b8cb5b51cfb54dd483cb5329c7ea0b42'
 from inference_agent_E import run_single_task
 from inference_agent_E import Perceptor, DEFAULT_PERCEPTION_ARGS, ADB_PATH, INIT_TIPS, INIT_SHORTCUTS, REASONING_MODEL
 import torch
-import os
+import sys
+from pathlib import Path
 import json
 import shutil
 import time
+import logging
+
+# 获取截图目录（优先级：环境变量 > 默认值）
+def get_screenshot_dir():
+    env_dir = os.getenv('MOBILE_AGENT_SCREENSHOT_DIR')
+    if env_dir:
+        # 确保目录存在
+        os.makedirs(env_dir, exist_ok=True)
+        return env_dir
+    
+    # 默认路径 - 使用绝对路径
+    default_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'screenshot')
+    os.makedirs(default_dir, exist_ok=True)
+    return default_dir
+
+screenshot_path = os.path.join(get_screenshot_dir(), 'screenshot.png')
 
 def main():
     import argparse
@@ -65,7 +85,7 @@ def main():
             print("ERROR:", e)
     else:
         # multi task inference
-        task_json = json.load(open(args.tasks_json, "r",encoding="utf-8"))
+        task_json = json.load(open(args.tasks_json, "r"))
         if "tasks" in task_json:
             tasks = task_json["tasks"]
         else:
@@ -91,10 +111,9 @@ def main():
             elif os.path.exists(persistent_tips_path):
                 pass
             else:
-                with open(persistent_tips_path, "w") as f:
+                with open(persistent_tips_path, "w", encoding="utf-8") as f:
                     init_knowledge = INIT_TIPS
                     f.write(init_knowledge)
-            
             if args.specified_shortcuts_path is not None:
                 shutil.copy(args.specified_shortcuts_path, persistent_shortcuts_path)
             elif os.path.exists(persistent_shortcuts_path):
@@ -146,10 +165,22 @@ def main():
                 print(f"Failed when doing task: {instruction}")
                 print("ERROR:", e)
                 error_tasks.append(task_id)
-        
         error_task_output_path = f"{run_log_dir}/error_tasks.json"
-        with open(error_task_output_path, "w") as f:
-            json.dump(error_tasks, f, indent=4)
+        with open(error_task_output_path, "w", encoding="utf-8") as f:
+            json.dump(error_tasks, f, indent=4, ensure_ascii=False)
+
+def load_config(config_path):
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+        return config
+    except Exception as e:
+        print(f"❌ 配置加载失败: {str(e)}")
+        raise
+
+# 设置日志记录
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     main()

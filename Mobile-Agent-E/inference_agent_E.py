@@ -6,6 +6,7 @@ import shutil
 from PIL import Image, ImageDraw
 from time import sleep
 
+
 from MobileAgentE.api import inference_chat
 from MobileAgentE.text_localization import ocr
 from MobileAgentE.icon_localization import det
@@ -35,8 +36,8 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 ADB_PATH = os.environ.get("ADB_PATH", default="adb")
 
 ## Reasoning model configs
-BACKBONE_TYPE = os.environ.get("BACKBONE_TYPE", default="OpenAI") # "OpenAI" or "Gemini" or "Claude"
-assert BACKBONE_TYPE in ["OpenAI", "Gemini", "Claude"], "Unknown BACKBONE_TYPE"
+BACKBONE_TYPE = os.environ.get("BACKBONE_TYPE", default="OpenAI") # "OpenAI" or "Gemini" or "Claude" or "Qwen"
+assert BACKBONE_TYPE in ["OpenAI", "Gemini", "Claude", "Qwen"], "Unknown BACKBONE_TYPE"
 print("### Using BACKBONE_TYPE:", BACKBONE_TYPE)
 
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
@@ -48,6 +49,8 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", default=None)
 CLAUDE_API_URL = "https://api.anthropic.com/v1/messages"
 CLAUDE_API_KEY = os.environ.get("CLAUDE_API_KEY", default=None)
 
+
+
 if BACKBONE_TYPE == "OpenAI":
     REASONING_MODEL = "gpt-4o-2024-11-20"
     KNOWLEDGE_REFLECTION_MODEL = "gpt-4o-2024-11-20"
@@ -57,6 +60,9 @@ elif BACKBONE_TYPE == "Gemini":
 elif BACKBONE_TYPE == "Claude":
     REASONING_MODEL = "claude-3-5-sonnet-20241022"
     KNOWLEDGE_REFLECTION_MODEL = "claude-3-5-sonnet-20241022"
+elif BACKBONE_TYPE == "Qwen":
+    REASONING_MODEL = "qwen-max"
+    KNOWLEDGE_REFLECTION_MODEL = "qwen-max"
 
 ## you can specify a jsonl file path for tracking API usage
 USAGE_TRACKING_JSONL = None # e.g., usage_tracking.jsonl
@@ -68,8 +74,8 @@ CAPTION_CALL_METHOD = "api"
 CAPTION_MODEL = "qwen-vl-max"
 
 QWEN_API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
-QWEN_API_KEY = os.environ.get("QWEN_API_KEY", default=None)
-
+# 从环境变量获取API密钥
+QWEN_API_KEY = os.environ.get("DASHSCOPE_API_KEY", default=None)
 
 ## Initial Tips provided by user; You can add additional custom tips ###
 
@@ -78,8 +84,22 @@ import os
 # 读取custom_tips_for_cn_apps.txt文件内容
 tips_file_path = os.path.join(os.path.dirname(__file__), 'data', 'custom_tips_for_cn_apps.txt')
 
-with open(tips_file_path, 'r', encoding='utf-8') as f:
-    content = f.read()
+# 尝试多种编码方式读取文件
+try:
+    with open(tips_file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+except UnicodeDecodeError:
+    try:
+        with open(tips_file_path, 'r', encoding='gbk') as f:
+            content = f.read()
+    except UnicodeDecodeError:
+        try:
+            with open(tips_file_path, 'r', encoding='gb2312') as f:
+                content = f.read()
+        except UnicodeDecodeError:
+            # 如果所有编码都失败，使用错误处理
+            with open(tips_file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
 
 # 提取INIT_TIPS的字符串部分
 start_marker = 'INIT_TIPS = """'
@@ -91,6 +111,7 @@ INIT_TIPS = content[start_idx:end_idx].strip()
 ## other
 TEMP_DIR = "temp"
 SCREENSHOT_DIR = "screenshot"
+
 SLEEP_BETWEEN_STEPS = 5
 
 ###################################################################################################
@@ -336,7 +357,7 @@ class Perceptor:
             images = sorted(images, key=lambda x: int(x.split('/')[-1].split('.')[0]))
             image_id = [int(image.split('/')[-1].split('.')[0]) for image in images]
             icon_map = {}
-            prompt = 'This image is an icon from a phone screen. Please briefly describe the shape and color of this icon in one sentence.'
+            prompt = 'This image is an icon from a phone screen. Please briefly describe the shape and color of this icon in one sentence.Make sure to include all symbols exactly as they appear, such as "--".'
             if CAPTION_CALL_METHOD == "local":
                 for i in range(len(images)):
                     image_path = os.path.join(temp_file, images[i])
@@ -395,6 +416,8 @@ def get_reasoning_model_api_response(chat, model_type=BACKBONE_TYPE, model=None,
         return inference_chat(chat, model, GEMINI_API_URL, GEMINI_API_KEY, usage_tracking_jsonl=USAGE_TRACKING_JSONL, temperature=temperature)
     elif model_type == "Claude":
         return inference_chat(chat, model, CLAUDE_API_URL, CLAUDE_API_KEY, usage_tracking_jsonl=USAGE_TRACKING_JSONL, temperature=temperature)
+    elif model_type == "Qwen":
+        return inference_chat(chat, model, QWEN_API_URL, QWEN_API_KEY, usage_tracking_jsonl=USAGE_TRACKING_JSONL, temperature=temperature)
     else:
         raise ValueError(f"Unknown model type: {model_type}")
     
