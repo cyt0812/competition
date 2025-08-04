@@ -1,11 +1,11 @@
 
 {
     "length": 1,
-    "scenario": "TAKEOUT_ORDERING",
-    "scenario_id": 2,
+    "scenario": "MEITUAN_TAKEOUT_ORDERING",
+    "scenario_id": 4,
     "tasks": [
         {
-            "task_id": "2_braised_chicken_rice_takeaway",
+            "task_id": "1_braised_chicken_rice_takeaway",
             "instruction": "Order a braised chicken rice takeaway on Meituan. The price should not exceed 20 yuan, and short distance is a priority.",
             "type": "single_app",
             "apps": [

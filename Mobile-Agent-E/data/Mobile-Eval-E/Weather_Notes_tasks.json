@@ -1,10 +1,10 @@
 {
     "length": 1,
-    "scenario": "weather_notes",
-    "scenario_id": 0,
+    "scenario": "WEATHER_NOTES",
+    "scenario_id": 7,
     "tasks": [
         {
-            "task_id": "weather",
+            "task_id": "1_weather",
             "instruction": "Go to your browser and search for the weather for the next few days and record it in Notes.",
             "type": "multi_app",
             "apps": ["Browser","Notes"],

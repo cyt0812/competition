@@ -1,11 +1,11 @@
 {
-    "length": 1,
-    "scenario": "China Unicom App Spam Call Blocking Setup Task",
-    "scenario_id": "unicom_harassment_simple_setup",
+    "length": 2,
+    "scenario": "CHINAUNICOM__SPAM_CALL_BLOCKING_SETUP_AND_CHECK",
+    "scenario_id": 2,
     "type": "single_app",
     "tasks": [
         {
-            "task_id": "unicom_harassment_simple_001",
+            "task_id": "1_unicom_harassment_simple",
             "instruction": "Set up spam call blocking in the China Unicom Security Manager module under the services section of the Unicom app",
             "type": "single_app",
             "apps": ["China Unicom"],
@@ -33,6 +33,31 @@
                 "If the spam call module is not selected (no checkmark in the upper right corner), click to select the module",
                 "Click the 'Save Settings' button to confirm the configuration",
                 "Confirm that the settings have been successfully saved"
+            ]
+        },
+        {
+            "task_id": "2_unicom_harassment_simple",
+            "instruction": "Retrieve the number of blocked calls and marketing SMS messages in the 'China Unicom Security Manager' module under the 'Services' section of the China Unicom app.",
+            "type": "single_app",
+            "apps": [
+                "China Unicom"
+            ],
+            "rubrics": [
+                "Opened the China Unicom app and logged in successfully",
+                "Navigated to the 'Services Hall' section",
+                "Located and entered the 'China Unicom Security Manager' module",
+                "Found and recorded the 'Blocked Calls' count",
+                "Found and recorded the 'Marketing SMS Blocked' count"
+            ],
+            "human_reference_operations": [
+                "Launch the China Unicom app",
+                "Enter login credentials and tap 'Login'",
+                "Tap the 'Services' tab in the bottom navigation bar",
+                "Scroll down in the 'Services Hall' to locate 'China Unicom Security Manager'. If not found immediately, continue scrolling rather than repeating previous actions.",
+                "In the Security Manager interface, locate the 'Call Protection' section",
+                "Note down the number displayed next to 'Blocked Calls'",
+                "Scroll to find the 'SMS Protection' section",
+                "Note down the number displayed next to 'Marketing SMS Blocked'"
             ]
         }
     ]
