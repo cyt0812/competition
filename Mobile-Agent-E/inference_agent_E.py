@@ -80,12 +80,7 @@ CAPTION_MODEL = "qwen-vl-max"
 
 QWEN_API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
 # 从环境变量获取API密钥
-QWEN_API_KEY = os.environ.get("DASHSCOPE_API_KEY", default=None)
-print(f"QWEN_API_KEY的值: {QWEN_API_KEY}")
-# 确保API密钥被正确设置
-if not QWEN_API_KEY:
-    print("警告: QWEN_API_KEY未从环境变量获取! 使用硬编码密钥作为备用...")
-    QWEN_API_KEY = 'sk-b8cb5b51cfb54dd483cb5329c7ea0b42'
+QWEN_API_KEY = os.environ.get("QWEN_API_KEY", default=None)
 
 
 ## Initial Tips provided by user; You can add additional custom tips ###
@@ -166,21 +161,10 @@ def generate_local(tokenizer, model, image_file, query):
 
 
 def process_image(image, query, caption_model=CAPTION_MODEL):
-    # 确保os模块已导入
-    import os
-    
-    # 获取并打印API密钥（用于调试）
-    api_key = os.environ.get('DASHSCOPE_API_KEY')
-    print(f"从环境变量获取的API密钥: {api_key}")
-    print(f"环境变量是否存在: {'DASHSCOPE_API_KEY' in os.environ}")
-    
     # 设置API密钥
-    dashscope.api_key = api_key
-    
+    dashscope.api_key = os.environ.get('QWEN_API_KEY')
     # 验证API密钥是否已设置
-    if not dashscope.api_key:
-        print("警告: API密钥未设置! 使用硬编码密钥作为备用...")
-        dashscope.api_key = 'sk-b8cb5b51cfb54dd483cb5329c7ea0b42'
+
     image = "file://" + image
     messages = [{
         'role': 'user',
