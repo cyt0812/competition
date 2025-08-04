@@ -73,6 +73,8 @@ CAPTION_CALL_METHOD = "api"
 CAPTION_MODEL = "qwen-vl-max"
 
 QWEN_API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
+
+# 从环境变量获取API密钥
 QWEN_API_KEY = os.environ.get("QWEN_API_KEY", default=None)
 
 ## Initial Tips provided by user; You can add additional custom tips ###
@@ -156,6 +158,7 @@ def generate_local(tokenizer, model, image_file, query):
 
 def process_image(image, query, caption_model=CAPTION_MODEL):
     dashscope.api_key = QWEN_API_KEY
+
     image = "file://" + image
     messages = [{
         'role': 'user',
