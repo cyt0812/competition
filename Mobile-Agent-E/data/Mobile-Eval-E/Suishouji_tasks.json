@@ -1,10 +1,10 @@
 {
   "length": 1,
-  "scenario": "bookkeeping",
-  "scenario_id": 0,
+  "scenario": "SUISHOUJI_RECORD",
+  "scenario_id": 5,
   "tasks": [
     {
-      "task_id": "record_expense",
+      "task_id": "1_record_expense",
       "instruction": "Today I ate out and spent 80 yuan, using 随手记 (SuiShouJi) to record the transaction.",
       "type": "single_app",
       "apps": ["SuiShouJi"],

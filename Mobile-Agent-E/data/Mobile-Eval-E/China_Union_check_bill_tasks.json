@@ -1,10 +1,10 @@
 {
     "length": 1,
-    "scenario": "chinaunicom_task",
-    "scenario_id": 2,
+    "scenario": "CHINAUNICOM__SUB_BILL",
+    "scenario_id": 1,
     "tasks": [
         {
-             "task_id": "chinaunicom_task",
+             "task_id": "1_task_sub_bill",
             "instruction": "Find an application called China Unicom, then check the detailed sub-bill of expense items.",
             "type": "single_app",
             "apps": [
