@@ -1,10 +1,10 @@
 {
   "length": 1,
-  "scenario": "shopping",
-  "scenario_id": 0,
+  "scenario": "TAOBAO_SHOPPING",
+  "scenario_id": 6,
   "tasks": [
     {
-      "task_id": "taobao_add_2_books",
+      "task_id": "1_taobao_add_2_books",
       "instruction": "Go to Taobao to purchase 'Stray Birds', sort the results by price from low to high, compare the options, select the 2 cheapest purchase methods, add them to the shopping cart, and finally stay on the shopping cart page.",
       "type": "single_app",
       "apps": ["Taobao"],

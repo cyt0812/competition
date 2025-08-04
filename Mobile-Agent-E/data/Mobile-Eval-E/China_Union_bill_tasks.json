@@ -1,10 +1,10 @@
 {
     "length": 2,
-    "scenario": "phonebill",
+    "scenario": "CHINAUNICOM_PHONEBILL_CHARGE",
     "scenario_id": 0,
     "tasks": [
         {
-            "task_id": "check",
+            "task_id": "1_check_remaining_credit",
             "instruction": "Find an application called China Unicom, then check the remaining credit. ",
             "type": "single_app",
             "apps": [
@@ -20,7 +20,7 @@
             ]
         },
         {
-            "task_id": "charge",
+            "task_id": "2_charge",
             "instruction": "If the phone bill is less than 60 RMB, use Alipay to charge it.If not, stop.",
             "type": "single_app",
             "apps": [
