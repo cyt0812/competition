@@ -138,10 +138,6 @@ st.markdown(
 )
 
 # 标题和logo
-if "executing" not in st.session_state:
-    st.session_state.executing = False
-
-# 设置 logo 和标题在同一行
 col1, col2 = st.columns([1, 5])
 with col1:
     st.image("logo/logo6.png", width=80)

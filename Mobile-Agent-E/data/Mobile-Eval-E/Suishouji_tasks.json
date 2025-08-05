@@ -1,0 +1,25 @@
+{
+  "length": 1,
+  "scenario": "SUISHOUJI_RECORD",
+  "scenario_id": 5,
+  "tasks": [
+    {
+      "task_id": "1_record_expense",
+      "instruction": "Today I ate out and spent 80 yuan, using 随手记 (SuiShouJi) to record the transaction.",
+      "type": "single_app",
+      "apps": ["SuiShouJi"],
+      "rubrics": [
+        "Parsed natural language input successfully",
+        "Extracted correct amount and merchant information",
+        "Auto-assigned appropriate expense category",
+        "Record saved to SuiShouJi automatically"
+      ],
+      "human_references": [
+        "Open the SuiShouJi app. Its icon is orange with a stylized white yuan (¥) symbol.",
+        "Tap the '+' or 'Record' button on the home screen.",
+        "Enter 'Eating out' as the category, and input 80 yuan as the amount.",
+        "Tap 'Save' or confirm to finish recording the transaction."
+      ]
+    }
+  ]
+}

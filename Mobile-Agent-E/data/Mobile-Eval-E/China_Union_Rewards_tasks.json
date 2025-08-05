@@ -1,10 +1,10 @@
 {
   "length": 1,
-  "scenario": "LIANTONG_APP_RIGHTS",
-  "scenario_id": 1001,
+  "scenario": "CHINAUNICOM__RIGHTS",
+  "scenario_id": 3,
   "tasks": [
     {
-      "task_id": "claim_rights",
+      "task_id": "1_claim_rights",
       "instruction": "到中国联通的福利中心去领取权益。",
       "type": "single_app",
       "apps": [
