@@ -17,3 +17,7 @@ datasets
 modelscope
 matplotlib
 dashscope
+streamlit
+psutil
+speech_recognition
+streamlit_mic_recorder
