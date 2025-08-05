@@ -2,10 +2,144 @@ import streamlit as st
 import subprocess
 import psutil
 import os
-import signal
+import speech_recognition as sr
+from streamlit_mic_recorder import mic_recorder
+import json
 import time
 
-st.set_page_config(page_title="Mobile Agent Chat", layout="centered")
+st.set_page_config(page_title="Mobile Agent Chat", layout="wide")
+
+# 初始化状态
+for key, default_value in {
+    "messages": [],
+    "executing": False,
+    "input_disabled": False,
+    "task_to_execute": None,
+    "pid": None,
+    "text_active": False,
+    "voice_active": False,
+}.items():
+    if key not in st.session_state:
+        st.session_state[key] = default_value
+
+# 自定义样式
+st.markdown(
+    """
+    <style>
+    html, body, #root, .appview-container {
+        height: 100vh !important;
+        margin: 0; padding: 0;
+        background: #f9f9f9;
+    }
+    .appview-container main {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        padding: 10px 20px 70px 20px;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+    #chat-container {
+        flex-grow: 1;
+        overflow-y: auto;
+        color: #333;
+        font-size: 16px;
+        line-height: 1.4;
+        padding-right: 10px;
+        word-break: break-word;
+    }
+    .chat-message-user {
+        margin-bottom: 12px;
+        color: #1a73e8;
+        font-weight: 600;
+    }
+    .chat-message-assistant {
+        margin-bottom: 12px;
+        color: #444;
+        font-weight: 500;
+        white-space: pre-wrap;
+        background: #eef1f5;
+        padding: 8px 12px;
+        border-radius: 6px;
+    }
+    #input-area {
+        position: fixed !important;
+        bottom: 0;
+        left: 280px;
+        width: calc(100% - 280px);
+        background: white;
+        box-shadow: 0 -1px 6px rgb(0 0 0 / 0.1);
+        padding: 8px 20px 12px 20px;
+        box-sizing: border-box;
+        z-index: 1000;
+        user-select: none;
+    }
+    #input-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+    #input-row input[type="text"] {
+        flex-grow: 1;
+        height: 36px;
+        font-size: 15px;
+        padding: 0 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        outline-offset: 0;
+    }
+    .main-btn {
+        height: 36px;
+        min-width: 60px;
+        border-radius: 6px;
+        background-color: #1a73e8;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s ease-in-out;
+        user-select: none;
+    }
+    .main-btn:hover {
+        background-color: #155ab6;
+        transform: translateY(-1px);
+    }
+    .mic-btn {
+        background-color: #34a853 !important;
+    }
+    .mic-btn:hover {
+        background-color: #2c8c46 !important;
+    }
+    .disabled-btn {
+        background-color: #ccc !important;
+        cursor: not-allowed;
+        color: #666 !important;
+        transform: none !important;
+    }
+    .small-task-btn {
+        height: 24px !important;
+        padding: 0 5px !important;
+        font-size: 10px !important;
+        min-width: auto !important;
+        border-radius: 4px !important;
+        background-color: #f0f2f6 !important;
+        color: #333 !important;
+        border: 1px solid #ddd !important;
+        transition: all 0.2s ease !important;
+    }
+    .small-task-btn:hover {
+        background-color: #e6e9ed !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# 标题和logo
+if "executing" not in st.session_state:
+    st.session_state.executing = False
 
 # 设置 logo 和标题在同一行
 col1, col2 = st.columns([1, 5])
@@ -14,14 +148,22 @@ with col1:
 with col2:
     st.title("Mobile Agent Chat")
 
-#设置侧边栏，包含历史记录和删除按钮
+# 聊天消息区
+st.markdown('<div id="chat-container">', unsafe_allow_html=True)
+for msg in st.session_state.messages:
+    if msg["role"] == "user":
+        st.markdown(f'<div class="chat-message-user">👤 {msg["content"]}</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<div class="chat-message-assistant">🤖 {msg["content"]}</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
+
+# 侧边栏
 with st.sidebar:
     st.header("🕘 历史对话")
 
     #✅ 初始化（必须放在最前面）
     if "messages" not in st.session_state:
         st.session_state.messages = []
-
 
     # 显示历史记录
     if st.session_state.messages:
@@ -33,14 +175,15 @@ with st.sidebar:
         st.info("暂无对话记录")
 
     # 添加清空按钮
-    if st.button("🧹 清空记录"):
+    if st.button("🧹 清空记录",disabled= st.session_state.get("executing")):
         st.session_state.messages = []
         st.rerun()
 
     # 添加ADB测试按钮到侧栏
     st.write(f"**运行前请先点击ADB测试按钮↓**")
     command_adb = "adb devices"
-    if st.button("📱 ADB测试"):
+    if st.button("📱 ADB测试",disabled= st.session_state.get("executing")):
+    # if st.button("📱 ADB测试"):
         try:
             result = subprocess.check_output(command_adb, shell=True, text=True)
             device_num = result.count("device") - 1
@@ -54,28 +197,179 @@ with st.sidebar:
                     device_serial_number.append(parts[0])
                 device_serial_number = "\n".join(device_serial_number)
                 st.success("✅ 已连接至" + str(device_num) + "个设备\n设备序列号：\n" + device_serial_number)
-                # st.markdown(f"**设备序列号：**")
-                # st.markdown(f"**{device_serial_number}**")
             else:
-                st.error("❌ 请检查设备连接并确保已在设备上开启ADB调试功能")
+                st.error("❌ 没有检测到设备，请检查连接")
         except subprocess.CalledProcessError as e:
-            st.error("❌ 请正确安装ADB工具并将其添加到环境变量")
+            st.error("❌ ADB 工具未安装或未添加到环境变量")
             st.code(e.output)
 
-    #添加重置按钮到侧栏
-    if "executing" not in st.session_state:
-        st.session_state.executing = False
-    st.write("**按下stop按钮后请点击重置任务状态按钮↓**")
-    if st.button("🔄 重置任务状态"):
-        st.session_state.executing = False
-        st.rerun()
+# 底部输入区
+st.markdown('<div id="input-area">', unsafe_allow_html=True)
+mode_task_cols = st.columns([4, 1, 1])
+with mode_task_cols[0]:
+    st.markdown("<div style='height: 38px;'></div>", unsafe_allow_html=True)
+with mode_task_cols[1]:
+    bill_clicked = st.button(
+        "联通话费充值",
+        key="bill_btn",
+        disabled=st.session_state.input_disabled,
+        help="余额低于20元时充值",
+        use_container_width=True
+    )
+    # st.markdown("""
+    # <script>
+    #     document.querySelector('[data-testid="stButton"]:nth-of-type(3) button')
+    #         .classList.add('small-task-btn');
+    # </script>
+    # """, unsafe_allow_html=True)
+with mode_task_cols[2]:
+    reward_clicked = st.button(
+        "权益领取",
+        key="reward_btn",
+        disabled=st.session_state.input_disabled,
+        help="联通权益领取",
+        use_container_width=True
+    )
+    # st.markdown("""
+    # <script>
+    #     document.querySelector('[data-testid="stButton"]:nth-of-type(4) button')
+    #         .classList.add('small-task-btn');
+    # </script>
+    # """, unsafe_allow_html=True)
 
-#添加退出按钮，按下后退出程序
-# if st.button("退出程序"):
-#     pid = os.getpid()
-#     os.kill(pid, signal.SIGINT)
+#输入框以及语音输入，发送，停止三个按钮
+input_cols = st.columns([10, 1, 1], gap="small")
+with input_cols[0]:
 
-#添加终止按钮，按下后终止当前操作
+    # user_text = st.text_input(
+    #     "",
+    #     key="custom_input",
+    #     placeholder="请输入任务指令，例如：用微信发送信息“你好”给联系人XXX",
+    #     disabled=st.session_state.input_disabled or st.session_state.voice_active,
+    #     label_visibility="collapsed",
+    # )
+
+    user_text = st.chat_input(
+        placeholder="请输入任务指令，例如：打开微信并发送一条消息",
+        key="custom_input",
+        disabled=st.session_state.input_disabled or st.session_state.voice_active
+    )
+
+with input_cols[1]:
+    mic_disabled = st.session_state.input_disabled or st.session_state.text_active
+    audio = None
+    if not mic_disabled:
+        audio = mic_recorder(
+            start_prompt="🎤",
+            stop_prompt="⏹️",
+            just_once=True,
+            use_container_width=True,
+        )
+    else:
+        st.button("🎤", disabled=True, use_container_width=True)
+# with input_cols[2]:
+#     send_disabled = st.session_state.input_disabled or st.session_state.voice_active
+#     send_clicked = st.button("发送", use_container_width=True, disabled=send_disabled)
+
+with input_cols[2]:
+    if st.button("停止任务", disabled=not st.session_state.get("executing")):
+    # if st.button("停止任务"):
+        pid = st.session_state.get("pid")
+        if not st.session_state.executing:
+            pid = None
+        if pid:
+            try:
+                p = psutil.Process(pid)
+                p.terminate()  # 或 p.kill()
+                st.session_state.executing = False
+                st.session_state.begin_execution = False
+                st.session_state.input_disabled = False
+                st.session_state.task_to_execute = None
+                st.session_state.text_active = False
+                st.session_state.voice_active = False
+                st.success("任务已终止")
+                st.rerun()  # 刷新 UI，恢复输入状态
+            except Exception as e:
+                st.error(f"终止失败：{e}")
+        else:
+            st.warning("没有可终止的任务")
+
+# st.markdown("""
+# <script>
+#     document.querySelector('[data-testid="stButton"]:nth-of-type(5) button')
+#         .classList.add('main-btn');
+#     document.querySelector('.mic-recorder-container button')
+#         .classList.add('main-btn');
+#     document.querySelectorAll('button:disabled')
+#         .forEach(btn => btn.classList.add('disabled-btn'));
+# </script>
+# """, unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
+
+#语音转文字
+def speech_to_text(audio_data):
+    r = sr.Recognizer()
+    try:
+        return r.recognize_google(audio_data, language="zh-CN")
+    except sr.UnknownValueError:
+        return "无法识别语音"
+    except sr.RequestError as e:
+        return f"语音服务请求失败: {e}"
+
+
+# 处理文本发送
+# if send_clicked and not st.session_state.input_disabled:
+#     if user_text.strip():
+#         st.session_state.text_active = True
+#         st.session_state.messages.append({"role": "user", "content": user_text.strip()})
+#         st.session_state.task_to_execute = user_text.strip()
+#         st.session_state.input_disabled = True
+#         st.session_state.executing = True
+#         st.rerun()
+
+# 处理语音输入
+if audio and not st.session_state.input_disabled:
+    st.session_state.voice_active = True
+    with st.chat_message("user"):
+        st.markdown("🎤 正在识别语音...")
+    audio_data = sr.AudioData(audio["bytes"], sample_rate=audio["sample_rate"], sample_width=2)
+    recognized_text = speech_to_text(audio_data)
+    st.session_state.messages.append({"role": "user", "content": recognized_text})
+    st.session_state.task_to_execute = recognized_text
+    st.session_state.input_disabled = True
+    st.session_state.executing = True
+    st.session_state.voice_active = False
+    st.rerun()
+
+#处理chat_input
+if user_text and not st.session_state.input_disabled:
+    st.session_state.text_active = True
+    st.session_state.messages.append({"role": "user", "content": user_text.strip()})
+    st.session_state.task_to_execute = user_text.strip()
+    st.session_state.input_disabled = True
+    st.session_state.executing = True
+    st.rerun()
+
+# 尝试多种编码方式读取文件
+def load_task_instructions(file_path):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    except UnicodeDecodeError:
+        try:
+            with open(file_path, 'r', encoding='gbk') as f:
+                data = json.load(f)
+        except UnicodeDecodeError:
+            try:
+                with open(file_path, 'r', encoding='gb2312') as f:
+                    data = json.load(f)
+            except UnicodeDecodeError:
+                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    data = json.load(f)
+    except FileNotFoundError:
+        st.error(f"❌ 未找到任务文件: {file_path}")
+        return []
+    return [sub_task.get("instruction", "") for sub_task in data.get("tasks", []) if sub_task.get("instruction")]
 
 # 聊天状态初始化
 if "messages" not in st.session_state:
@@ -83,81 +377,98 @@ if "messages" not in st.session_state:
 if "executing" not in st.session_state:
     st.session_state.executing = False
 
-# 显示聊天记录
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+# 处理话费充值按钮点击
+if bill_clicked and not st.session_state.input_disabled:
+    instructions = load_task_instructions("data/Mobile-Eval-E/China_Union_bill_tasks.json")
+    if instructions:
+        st.session_state.messages.append({"role": "user", "content": "话费充值"})
+        st.session_state.task_to_execute = "\n".join(instructions)
+        st.session_state.input_disabled = True
+        st.session_state.executing = True
+        st.rerun()
 
-def is_process_alive(pid):
-    try:
-        return psutil.pid_exists(pid) and psutil.Process(pid).is_running()
-    except Exception:
-        return False
+# 处理权益领取按钮点击
+if reward_clicked and not st.session_state.input_disabled:
+    instructions = load_task_instructions("data/Mobile-Eval-E/China_Union_Rewards_tasks.json")
+    if instructions:
+        st.session_state.messages.append({"role": "user", "content": "权益领取"})
+        st.session_state.task_to_execute = "\n".join(instructions)
+        st.session_state.input_disabled = True
+        st.session_state.executing = True
+        st.rerun()
 
 if "pid" not in st.session_state:
     st.session_state.pid = None
+if "begin_execution" not in st.session_state:
+    st.session_state.begin_execution = False
 
-# if st.session_state.get("executing", False):
-#     pid = st.session_state.get("pid")
-#     if pid and not is_process_alive(pid):
-#         st.warning("检测到任务已中断，自动重置状态")
-#         st.session_state.executing = False
-#         st.rerun()
 
-if st.session_state.executing:
-    pid = st.session_state.pid
-    if pid and not is_process_alive(pid):
-        st.warning("⚠️ 检测到任务已中断，状态已自动恢复")
+
+if "begin_execution" not in st.session_state:
+    st.session_state.begin_execution = True
+if "pid" not in st.session_state:
+    st.session_state.pid = None
+
+# 执行任务逻辑（核心修改：处理编码问题）
+if st.session_state.task_to_execute and st.session_state.executing and not st.session_state.begin_execution:
+    st.session_state.begin_execution = True
+    prompt = st.session_state.task_to_execute
+    if not prompt or not isinstance(prompt, str) or not prompt.strip():
+        st.error("❌ 任务指令为空或无效")
         st.session_state.executing = False
-        st.session_state.pid = None
-        st.rerun()  # rerun 一次以更新 UI
-        st.stop()   # 防止执行当前轮逻辑（这非常关键！）
+        st.session_state.input_disabled = False
+        st.session_state.task_to_execute = None
+        st.session_state.text_active = False
+        st.session_state.voice_active = False
+        st.session_state.begin_execution = False
+        st.rerun()
+    if not os.path.exists("run.py"):
+        st.error("❌ run.py 文件不存在")
+        st.session_state.executing = False
+        st.session_state.input_disabled = False
+        st.session_state.task_to_execute = None
+        st.session_state.text_active = False
+        st.session_state.voice_active = False
+        st.session_state.begin_execution = False
+        st.stop()
 
-# 只在未执行状态下显示输入框
-if not st.session_state.executing:
-    prompt = st.chat_input("请输入任务指令，例如：打开微信并发送一条消息")
+    with st.chat_message("assistant"):
+        message_placeholder = st.empty()
+        message_placeholder.markdown("🎯 正在执行任务，请稍候...\n")
+        output_lines = []
+        try:
+            # 关键修改：以二进制模式读取，不指定encoding
+            process = subprocess.Popen(
+                ["python", "run.py", "--run_name", "ui-task", "--setting", "individual", "--instruction", prompt],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                bufsize=1
+            )
+            st.session_state.pid = process.pid
 
-    if prompt:
-        # 标记为执行中
-        st.session_state.executing = True
-
-        # 添加用户消息
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-
-        # 执行任务并输出
-        with st.chat_message("assistant"):
-            message_placeholder = st.empty()
-            message_placeholder.markdown("🎯 正在执行任务，请稍候...\n")
-
-            try:
-                process = subprocess.Popen(
-                    ["python", "run.py", "--run_name", "ui-task", "--setting", "individual", "--instruction", prompt],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
-                    text=True,
-                    bufsize=1
-                )
-
-                st.session_state.pid = process.pid
-                output_lines = []
-                for line in process.stdout:
-                    output_lines.append(line)
-                    message_placeholder.markdown("```\n" + "".join(output_lines) + "\n```")
-
-                process.wait()
-
-            except Exception as e:
-                output_lines.append(f"\n执行失败：{str(e)}")
+            # 读取二进制输出并尝试多编码解码
+            for line in process.stdout:
+                try:
+                    # 优先UTF-8解码
+                    decoded_line = line.decode('utf-8')
+                except UnicodeDecodeError:
+                    # 失败则尝试GBK
+                    decoded_line = line.decode('gbk', errors='replace')
+                output_lines.append(decoded_line)
                 message_placeholder.markdown("```\n" + "".join(output_lines) + "\n```")
+            process.wait()
+        except Exception as e:
+            output_lines.append(f"\n执行失败：{str(e)}")
+            message_placeholder.markdown("```\n" + "".join(output_lines) + "\n```")
 
-            # 保存 assistant 最终消息
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": "```\n" + "".join(output_lines) + "\n```"
-            })
-
-        # 任务完成：更新状态 + 页面刷新
-        st.session_state.executing = False
-        st.rerun()  # 关键！刷新页面以恢复输入框
+        st.session_state.messages.append(
+            {"role": "assistant", "content": "```\n" + "".join(output_lines) + "\n```"}
+        )
+    st.session_state.executing = False
+    st.session_state.input_disabled = False
+    st.session_state.task_to_execute = None
+    st.session_state.text_active = False
+    st.session_state.voice_active = False
+    st.session_state.begin_execution = False
+    st.success("✅ 任务完成，输入已恢复")
+    st.rerun()
