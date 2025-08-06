@@ -9,7 +9,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='repla
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 # ────────────────────────────────────────────────────────────────────────────
 
-dashscope.api_key = 'sk-b8cb5b51cfb54dd483cb5329c7ea0b42'
+# dashscope.api_key = 'sk-b8cb5b51cfb54dd483cb5329c7ea0b42'
 from inference_agent_E import run_single_task
 from inference_agent_E import Perceptor, DEFAULT_PERCEPTION_ARGS, ADB_PATH, INIT_TIPS, INIT_SHORTCUTS, REASONING_MODEL
 import torch
