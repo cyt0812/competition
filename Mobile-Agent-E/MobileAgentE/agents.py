@@ -367,6 +367,9 @@ class Operator(BaseAgent):
             f"The attached image is a screenshot showing the current state of the phone. "
             f"Its width and height are {info_pool.width} and {info_pool.height} pixels, respectively.\n"
         )
+        #print(f"Operator类中获取的width: {info_pool.width}, height: {info_pool.height}")
+
+
         prompt += (
             "To help you better understand the content in this screenshot, we have extracted positional information for the text elements and icons, including interactive elements such as search bars. "
             "The format is: (coordinates; content). The coordinates are [x, y], where x represents the horizontal pixel position (from left to right) "
@@ -619,6 +622,7 @@ class ActionReflector(BaseAgent):
         prompt += "---\n"
         prompt += f"The attached two images are two phone screenshots before and after your last action. " 
         prompt += f"The width and height are {info_pool.width} and {info_pool.height} pixels, respectively.\n"
+        #print(f"ActionReflector类中获取的width: {info_pool.width}, height: {info_pool.height}")
         prompt += (
             "To help you better perceive the content in these screenshots, we have extracted positional information for the text elements and icons. "
             "The format is: (coordinates; content). The coordinates are [x, y], where x represents the horizontal pixel position (from left to right) "
@@ -717,6 +721,7 @@ class Notetaker(BaseAgent):
             f"The attached image is a screenshot showing the current state of the phone. "
             f"Its width and height are {info_pool.width} and {info_pool.height} pixels, respectively.\n"
         )
+        #print(f"Notetaker类中获取的width: {info_pool.width}, height: {info_pool.height}")
         prompt += (
             "To help you better perceive the content in this screenshot, we have extracted positional information for the text elements and icons. "
             "The format is: (coordinates; content). The coordinates are [x, y], where x represents the horizontal pixel position (from left to right) "
