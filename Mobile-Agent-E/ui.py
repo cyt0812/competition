@@ -160,6 +160,8 @@ with st.sidebar:
     st.header("🕘 历史对话")
 
     #✅ 初始化（必须放在最前面）
+
+    #✅ 初始化（必须放在最前面）
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
@@ -174,18 +176,32 @@ with st.sidebar:
 
     # 添加清空按钮
     if st.button("🧹 清空记录",disabled= st.session_state.get("executing")):
+    if st.button("🧹 清空记录",disabled= st.session_state.get("executing")):
         st.session_state.messages = []
+        st.rerun()
         st.rerun()
 
     # 添加ADB测试按钮到侧栏
     st.write(f"**运行前请先点击ADB测试按钮↓**")
+    st.write(f"**运行前请先点击ADB测试按钮↓**")
     command_adb = "adb devices"
+    if st.button("📱 ADB测试",disabled= st.session_state.get("executing")):
+    # if st.button("📱 ADB测试"):
     if st.button("📱 ADB测试",disabled= st.session_state.get("executing")):
     # if st.button("📱 ADB测试"):
         try:
             result = subprocess.check_output(command_adb, shell=True, text=True)
             device_num = result.count("device") - 1
             if device_num:
+                device_serial_number = []
+                lines = result.strip().split("\n")
+                for line in lines[1:]:
+                    if not line.strip():
+                        continue
+                    parts = line.split()
+                    device_serial_number.append(parts[0])
+                device_serial_number = "\n".join(device_serial_number)
+                st.success("✅ 已连接至" + str(device_num) + "个设备\n设备序列号：\n" + device_serial_number)
                 device_serial_number = []
                 lines = result.strip().split("\n")
                 for line in lines[1:]:
@@ -212,9 +228,15 @@ with mode_task_cols[1]:
         key="bill_btn",
         disabled=st.session_state.input_disabled,
         help="余额低于20元时充值",
+        help="余额低于20元时充值",
         use_container_width=True
     )
-
+    # st.markdown("""
+    # <script>
+    #     document.querySelector('[data-testid="stButton"]:nth-of-type(3) button')
+    #         .classList.add('small-task-btn');
+    # </script>
+    # """, unsafe_allow_html=True)
 with mode_task_cols[2]:
     reward_clicked = st.button(
         "权益领取",
@@ -223,15 +245,32 @@ with mode_task_cols[2]:
         help="联通权益领取",
         use_container_width=True
     )
+    # st.markdown("""
+    # <script>
+    #     document.querySelector('[data-testid="stButton"]:nth-of-type(4) button')
+    #         .classList.add('small-task-btn');
+    # </script>
+    # """, unsafe_allow_html=True)
 
 #输入框以及语音输入，发送，停止三个按钮
 input_cols = st.columns([10, 1, 1], gap="small")
 with input_cols[0]:
+
+    # user_text = st.text_input(
+    #     "",
+    #     key="custom_input",
+    #     placeholder="请输入任务指令，例如：用微信发送信息“你好”给联系人XXX",
+    #     disabled=st.session_state.input_disabled or st.session_state.voice_active,
+    #     label_visibility="collapsed",
+    # )
+
     user_text = st.chat_input(
         placeholder="请输入任务指令，例如：打开微信并发送一条消息",
         key="custom_input",
         disabled=st.session_state.input_disabled or st.session_state.voice_active
+        disabled=st.session_state.input_disabled or st.session_state.voice_active
     )
+
 
 with input_cols[1]:
     mic_disabled = st.session_state.input_disabled or st.session_state.text_active
@@ -245,6 +284,9 @@ with input_cols[1]:
         )
     else:
         st.button("🎤", disabled=True, use_container_width=True)
+# with input_cols[2]:
+#     send_disabled = st.session_state.input_disabled or st.session_state.voice_active
+#     send_clicked = st.button("发送", use_container_width=True, disabled=send_disabled)
 
 with input_cols[2]:
     if st.button("停止任务", disabled=not st.session_state.get("executing")):
@@ -269,48 +311,40 @@ with input_cols[2]:
         else:
             st.warning("没有可终止的任务")
 
+# st.markdown("""
+# <script>
+#     document.querySelector('[data-testid="stButton"]:nth-of-type(5) button')
+#         .classList.add('main-btn');
+#     document.querySelector('.mic-recorder-container button')
+#         .classList.add('main-btn');
+#     document.querySelectorAll('button:disabled')
+#         .forEach(btn => btn.classList.add('disabled-btn'));
+# </script>
+# """, unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 使用 pydub + speech_recognition 实现 webm 语音识别
-def speech_to_text(audio):
+#语音转文字
+def speech_to_text(audio_data):
+    r = sr.Recognizer()
     try:
-        print("🎧 audio keys:", audio.keys())
-        print("📏 sample_rate:", audio["sample_rate"])
-        print("📦 audio bytes type:", type(audio["bytes"]), "len:", len(audio["bytes"]))
-
-        import magic  # 用于检测MIME类型
-        mime_type = magic.from_buffer(audio['bytes'], mime=True)
-        print("🔍 Detected MIME type:", mime_type)
-
-        # 判断是否为原始 PCM 格式
-        is_pcm = mime_type in ["audio/L16", "audio/basic", "audio/x-wav", "audio/raw"]
-
-        if not is_pcm:
-            print("🎼 非PCM格式，开始转换为16kHz PCM mono...")
-            # 非 PCM，则先转换成识别友好格式
-            audio_segment = AudioSegment.from_file(io.BytesIO(audio["bytes"]), format="webm")
-            pcm_audio = audio_segment.set_frame_rate(16000).set_channels(1).set_sample_width(2)
-            raw_audio = pcm_audio.raw_data
-            sample_rate = pcm_audio.frame_rate
-            sample_width = pcm_audio.sample_width
-        else:
-            print("✅ 已是PCM格式，直接使用原始字节")
-            raw_audio = audio["bytes"]
-            sample_rate = audio["sample_rate"]
-            sample_width = 2  # 一般是 16-bit PCM（2 字节），也可以从其他字段获取更精确
-
-        # 构造 speech_recognition 可识别的 AudioData
-        recognizer = sr.Recognizer()
-        audio_data = sr.AudioData(raw_audio, sample_rate, sample_width)
-        return recognizer.recognize_google(audio_data, language="zh-CN")
-
+        return r.recognize_google(audio_data, language="zh-CN")
     except sr.UnknownValueError:
         return "无法识别语音"
     except sr.RequestError as e:
         return f"语音服务请求失败: {e}"
-    except Exception as e:
-        return f"语音识别处理错误: {e}"
 
+
+# 处理文本发送
+# if send_clicked and not st.session_state.input_disabled:
+#     if user_text.strip():
+#         st.session_state.text_active = True
+#         st.session_state.messages.append({"role": "user", "content": user_text.strip()})
+#         st.session_state.task_to_execute = user_text.strip()
+#         st.session_state.input_disabled = True
+#         st.session_state.executing = True
+#         st.rerun()
+
+# 处理语音输入
 if audio and not st.session_state.input_disabled:
     st.session_state.input_disabled = True
     st.session_state.voice_active = True
@@ -325,6 +359,14 @@ if audio and not st.session_state.input_disabled:
     st.session_state.voice_active = False
     st.rerun()
 
+#处理chat_input
+if user_text and not st.session_state.input_disabled:
+    st.session_state.text_active = True
+    st.session_state.messages.append({"role": "user", "content": user_text.strip()})
+    st.session_state.task_to_execute = user_text.strip()
+    st.session_state.input_disabled = True
+    st.session_state.executing = True
+    st.rerun()
 #处理chat_input
 if user_text and not st.session_state.input_disabled:
     st.session_state.text_active = True
@@ -355,6 +397,11 @@ def load_task_instructions(file_path):
         return []
     return [sub_task.get("instruction", "") for sub_task in data.get("tasks", []) if sub_task.get("instruction")]
 
+# 聊天状态初始化
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+if "executing" not in st.session_state:
+    st.session_state.executing = False
 # 聊天状态初始化
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -392,8 +439,21 @@ if "begin_execution" not in st.session_state:
     st.session_state.begin_execution = True
 if "pid" not in st.session_state:
     st.session_state.pid = None
+if "pid" not in st.session_state:
+    st.session_state.pid = None
+if "begin_execution" not in st.session_state:
+    st.session_state.begin_execution = False
+
+
+
+if "begin_execution" not in st.session_state:
+    st.session_state.begin_execution = True
+if "pid" not in st.session_state:
+    st.session_state.pid = None
 
 # 执行任务逻辑（核心修改：处理编码问题）
+if st.session_state.task_to_execute and st.session_state.executing and not st.session_state.begin_execution:
+    st.session_state.begin_execution = True
 if st.session_state.task_to_execute and st.session_state.executing and not st.session_state.begin_execution:
     st.session_state.begin_execution = True
     prompt = st.session_state.task_to_execute
@@ -405,6 +465,7 @@ if st.session_state.task_to_execute and st.session_state.executing and not st.se
         st.session_state.text_active = False
         st.session_state.voice_active = False
         st.session_state.begin_execution = False
+        st.session_state.begin_execution = False
         st.rerun()
     if not os.path.exists("run.py"):
         st.error("❌ run.py 文件不存在")
@@ -413,6 +474,7 @@ if st.session_state.task_to_execute and st.session_state.executing and not st.se
         st.session_state.task_to_execute = None
         st.session_state.text_active = False
         st.session_state.voice_active = False
+        st.session_state.begin_execution = False
         st.session_state.begin_execution = False
         st.stop()
 
@@ -430,6 +492,16 @@ if st.session_state.task_to_execute and st.session_state.executing and not st.se
             )
             st.session_state.pid = process.pid
 
+            # 初始化模块标记
+            module_flags = {
+                'Perceptor': False,
+                'Manager': False,
+                'Operator': False,
+                'Action Reflector': False,
+                'NoteKeeper': False,
+                'Experience Reflector': False
+            }
+
             # 读取二进制输出并尝试多编码解码
             for line in process.stdout:
                 try:
@@ -438,12 +510,66 @@ if st.session_state.task_to_execute and st.session_state.executing and not st.se
                 except UnicodeDecodeError:
                     # 失败则尝试GBK
                     decoded_line = line.decode('gbk', errors='replace')
-                output_lines.append(decoded_line)
-                message_placeholder.markdown("```\n" + "".join(output_lines) + "\n```")
+
+                # 根据显示模式过滤和格式化日志
+                display_line = True
+                formatted_line = decoded_line
+
+                # 检测模块标识（不区分大小写）
+                for module in module_flags:
+                    if module.lower() in decoded_line.lower() and 'thinking' not in decoded_line.lower():
+                        module_flags[module] = True
+                        for m in module_flags:
+                            if m != module:
+                                module_flags[m] = False
+                        break
+
+                # 检查是否为关键步骤并标蓝
+                formatted_line = decoded_line
+                
+                # 定义模块与关键词的对应关系
+                module_keywords = {
+                    'Manager': ['Current Subgoal:'],
+                    'Operator': ['Executing atomic action:'],
+                    'Action Reflector': ['Progress Status:'],
+                    'Experience Reflector': ['Progress Logs:', 'Finish Thought:']
+                    # Perceptor 和 NoteKeeper 模块没有需要标蓝的关键步骤
+                }
+                
+                # 检查当前活动模块，并匹配对应关键词（不区分大小写）
+                for module, keywords in module_keywords.items():
+                    if module_flags[module]:
+                        for keyword in keywords:
+                            if keyword.lower() in decoded_line.lower():
+                                # 转义可能影响HTML的特殊字符
+                                escaped_line = decoded_line.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                                formatted_line = f'<span style="color: blue;">{escaped_line}</span>'
+                                break
+                        break  # 找到活动模块后退出循环
+
+                if display_line:
+                    output_lines.append(formatted_line)
+
+                # 更新显示
+                message_placeholder.markdown("<pre>" + "".join(output_lines) + "</pre>", unsafe_allow_html=True)
+
             process.wait()
+
+            # 结果状态颜色
+            result_color = 'green'
+            if process.returncode != 0 or any('执行失败' in line for line in output_lines):
+                result_color = 'red'
+
+            # 添加结果状态
+            result_line = f'<span style="color: {result_color};">任务{"成功完成" if result_color == "green" else "执行失败"}</span>'
+            output_lines.append(result_line)
+            message_placeholder.markdown("<pre>" + "".join(output_lines) + "</pre>", unsafe_allow_html=True)
         except Exception as e:
             output_lines.append(f"\n执行失败：{str(e)}")
-            message_placeholder.markdown("```\n" + "".join(output_lines) + "\n```")
+            # 异常情况下结果状态为红色
+            result_line = '<span style="color: red;">任务执行失败</span>'
+            output_lines.append(result_line)
+            message_placeholder.markdown("<pre>" + "".join(output_lines) + "</pre>", unsafe_allow_html=True)
 
         st.session_state.messages.append(
             {"role": "assistant", "content": "```\n" + "".join(output_lines) + "\n```"}
