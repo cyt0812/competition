@@ -155,6 +155,8 @@ for msg in st.session_state.messages:
         st.markdown(f'<div class="chat-message-assistant">🤖 {msg["content"]}</div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
+ADB_PATH = os.environ.get("ADB_PATH", default="adb")
+
 # 侧边栏
 with st.sidebar:
     st.header("🕘 历史对话")
@@ -173,15 +175,14 @@ with st.sidebar:
         st.info("暂无对话记录")
 
     # 添加清空按钮
-    if st.button("🧹 清空记录",disabled= st.session_state.get("executing")):
+    if st.button("🧹 清空记录",disabled= st.session_state.get("executing"),use_container_width=True):
         st.session_state.messages = []
         st.rerun()
 
     # 添加ADB测试按钮到侧栏
     st.write(f"**运行前请先点击ADB测试按钮↓**")
-    command_adb = "adb devices"
-    if st.button("📱 ADB测试",disabled= st.session_state.get("executing")):
-    # if st.button("📱 ADB测试"):
+    command_adb = ADB_PATH + " devices"
+    if st.button("📱 ADB测试",disabled= st.session_state.get("executing"), use_container_width=True):
         try:
             result = subprocess.check_output(command_adb, shell=True, text=True)
             device_num = result.count("device") - 1
@@ -247,8 +248,7 @@ with input_cols[1]:
         st.button("🎤", disabled=True, use_container_width=True)
 
 with input_cols[2]:
-    if st.button("停止任务", disabled=not st.session_state.get("executing")):
-    # if st.button("停止任务"):
+    if st.button("停止", disabled=not st.session_state.get("executing"), use_container_width=True):
         pid = st.session_state.get("pid")
         if not st.session_state.executing:
             pid = None
@@ -302,14 +302,14 @@ def speech_to_text(audio):
         # 构造 speech_recognition 可识别的 AudioData
         recognizer = sr.Recognizer()
         audio_data = sr.AudioData(raw_audio, sample_rate, sample_width)
-        return recognizer.recognize_google(audio_data, language="zh-CN")
+        return recognizer.recognize_google(audio_data, language="zh-CN"), None
 
     except sr.UnknownValueError:
-        return "无法识别语音"
+        return "", "无法识别语音"
     except sr.RequestError as e:
-        return f"语音服务请求失败: {e}"
+        return "", f"语音服务请求失败: {e}"
     except Exception as e:
-        return f"语音识别处理错误: {e}"
+        return "", f"语音识别处理错误: {e}"
 
 if audio and not st.session_state.input_disabled:
     st.session_state.input_disabled = True
@@ -317,13 +317,19 @@ if audio and not st.session_state.input_disabled:
     with st.chat_message("user"):
         st.markdown("🎤 正在识别语音...")
 
-    recognized_text = speech_to_text(audio)
-
-    st.session_state.messages.append({"role": "user", "content": recognized_text})
-    st.session_state.task_to_execute = recognized_text
-    st.session_state.executing = True
-    st.session_state.voice_active = False
-    st.rerun()
+    recognized_text, recognized_text_error = speech_to_text(audio)
+    if not recognized_text_error:
+        st.session_state.messages.append({"role": "user", "content": recognized_text})
+        st.session_state.task_to_execute = recognized_text
+        st.session_state.executing = True
+        st.session_state.voice_active = False
+        st.rerun()
+    else:
+        st.error(recognized_text_error + " 3秒后自动重置")
+        st.session_state.voice_active = False
+        st.session_state.input_disabled = False
+        time.sleep(3)
+        st.rerun()
 
 #处理chat_input
 if user_text and not st.session_state.input_disabled:
