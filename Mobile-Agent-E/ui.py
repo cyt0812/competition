@@ -4,8 +4,6 @@ import psutil
 import os
 import speech_recognition as sr
 from streamlit_mic_recorder import mic_recorder
-from pydub import AudioSegment
-import io
 import json
 import time
 
@@ -160,8 +158,6 @@ with st.sidebar:
     st.header("🕘 历史对话")
 
     #✅ 初始化（必须放在最前面）
-
-    #✅ 初始化（必须放在最前面）
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
@@ -176,32 +172,18 @@ with st.sidebar:
 
     # 添加清空按钮
     if st.button("🧹 清空记录",disabled= st.session_state.get("executing")):
-    if st.button("🧹 清空记录",disabled= st.session_state.get("executing")):
         st.session_state.messages = []
-        st.rerun()
         st.rerun()
 
     # 添加ADB测试按钮到侧栏
     st.write(f"**运行前请先点击ADB测试按钮↓**")
-    st.write(f"**运行前请先点击ADB测试按钮↓**")
     command_adb = "adb devices"
-    if st.button("📱 ADB测试",disabled= st.session_state.get("executing")):
-    # if st.button("📱 ADB测试"):
     if st.button("📱 ADB测试",disabled= st.session_state.get("executing")):
     # if st.button("📱 ADB测试"):
         try:
             result = subprocess.check_output(command_adb, shell=True, text=True)
             device_num = result.count("device") - 1
             if device_num:
-                device_serial_number = []
-                lines = result.strip().split("\n")
-                for line in lines[1:]:
-                    if not line.strip():
-                        continue
-                    parts = line.split()
-                    device_serial_number.append(parts[0])
-                device_serial_number = "\n".join(device_serial_number)
-                st.success("✅ 已连接至" + str(device_num) + "个设备\n设备序列号：\n" + device_serial_number)
                 device_serial_number = []
                 lines = result.strip().split("\n")
                 for line in lines[1:]:
@@ -227,7 +209,6 @@ with mode_task_cols[1]:
         "联通话费充值",
         key="bill_btn",
         disabled=st.session_state.input_disabled,
-        help="余额低于20元时充值",
         help="余额低于20元时充值",
         use_container_width=True
     )
@@ -268,9 +249,7 @@ with input_cols[0]:
         placeholder="请输入任务指令，例如：打开微信并发送一条消息",
         key="custom_input",
         disabled=st.session_state.input_disabled or st.session_state.voice_active
-        disabled=st.session_state.input_disabled or st.session_state.voice_active
     )
-
 
 with input_cols[1]:
     mic_disabled = st.session_state.input_disabled or st.session_state.text_active
@@ -346,27 +325,18 @@ def speech_to_text(audio_data):
 
 # 处理语音输入
 if audio and not st.session_state.input_disabled:
-    st.session_state.input_disabled = True
     st.session_state.voice_active = True
     with st.chat_message("user"):
         st.markdown("🎤 正在识别语音...")
-
-    recognized_text = speech_to_text(audio)
-
+    audio_data = sr.AudioData(audio["bytes"], sample_rate=audio["sample_rate"], sample_width=2)
+    recognized_text = speech_to_text(audio_data)
     st.session_state.messages.append({"role": "user", "content": recognized_text})
     st.session_state.task_to_execute = recognized_text
+    st.session_state.input_disabled = True
     st.session_state.executing = True
     st.session_state.voice_active = False
     st.rerun()
 
-#处理chat_input
-if user_text and not st.session_state.input_disabled:
-    st.session_state.text_active = True
-    st.session_state.messages.append({"role": "user", "content": user_text.strip()})
-    st.session_state.task_to_execute = user_text.strip()
-    st.session_state.input_disabled = True
-    st.session_state.executing = True
-    st.rerun()
 #处理chat_input
 if user_text and not st.session_state.input_disabled:
     st.session_state.text_active = True
@@ -397,11 +367,6 @@ def load_task_instructions(file_path):
         return []
     return [sub_task.get("instruction", "") for sub_task in data.get("tasks", []) if sub_task.get("instruction")]
 
-# 聊天状态初始化
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-if "executing" not in st.session_state:
-    st.session_state.executing = False
 # 聊天状态初始化
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -439,21 +404,8 @@ if "begin_execution" not in st.session_state:
     st.session_state.begin_execution = True
 if "pid" not in st.session_state:
     st.session_state.pid = None
-if "pid" not in st.session_state:
-    st.session_state.pid = None
-if "begin_execution" not in st.session_state:
-    st.session_state.begin_execution = False
-
-
-
-if "begin_execution" not in st.session_state:
-    st.session_state.begin_execution = True
-if "pid" not in st.session_state:
-    st.session_state.pid = None
 
 # 执行任务逻辑（核心修改：处理编码问题）
-if st.session_state.task_to_execute and st.session_state.executing and not st.session_state.begin_execution:
-    st.session_state.begin_execution = True
 if st.session_state.task_to_execute and st.session_state.executing and not st.session_state.begin_execution:
     st.session_state.begin_execution = True
     prompt = st.session_state.task_to_execute
@@ -465,7 +417,6 @@ if st.session_state.task_to_execute and st.session_state.executing and not st.se
         st.session_state.text_active = False
         st.session_state.voice_active = False
         st.session_state.begin_execution = False
-        st.session_state.begin_execution = False
         st.rerun()
     if not os.path.exists("run.py"):
         st.error("❌ run.py 文件不存在")
@@ -474,7 +425,6 @@ if st.session_state.task_to_execute and st.session_state.executing and not st.se
         st.session_state.task_to_execute = None
         st.session_state.text_active = False
         st.session_state.voice_active = False
-        st.session_state.begin_execution = False
         st.session_state.begin_execution = False
         st.stop()
 
