@@ -19,5 +19,7 @@ matplotlib
 dashscope
 streamlit
 psutil
-speech_recognition
-streamlit_mic_recorder
+SpeechRecognition
+streamlit-mic-recorder
+pydub
+python-magic-bin
