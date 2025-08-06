@@ -4,6 +4,8 @@ import psutil
 import os
 import speech_recognition as sr
 from streamlit_mic_recorder import mic_recorder
+from pydub import AudioSegment
+import io
 import json
 import time
 
@@ -153,6 +155,8 @@ for msg in st.session_state.messages:
         st.markdown(f'<div class="chat-message-assistant">🤖 {msg["content"]}</div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
+ADB_PATH = os.environ.get("ADB_PATH", default="adb")
+
 # 侧边栏
 with st.sidebar:
     st.header("🕘 历史对话")
@@ -171,15 +175,14 @@ with st.sidebar:
         st.info("暂无对话记录")
 
     # 添加清空按钮
-    if st.button("🧹 清空记录",disabled= st.session_state.get("executing")):
+    if st.button("🧹 清空记录",disabled= st.session_state.get("executing"),use_container_width=True):
         st.session_state.messages = []
         st.rerun()
 
     # 添加ADB测试按钮到侧栏
     st.write(f"**运行前请先点击ADB测试按钮↓**")
-    command_adb = "adb devices"
-    if st.button("📱 ADB测试",disabled= st.session_state.get("executing")):
-    # if st.button("📱 ADB测试"):
+    command_adb = ADB_PATH + " devices"
+    if st.button("📱 ADB测试",disabled= st.session_state.get("executing"), use_container_width=True):
         try:
             result = subprocess.check_output(command_adb, shell=True, text=True)
             device_num = result.count("device") - 1
@@ -268,8 +271,7 @@ with input_cols[1]:
 #     send_clicked = st.button("发送", use_container_width=True, disabled=send_disabled)
 
 with input_cols[2]:
-    if st.button("停止任务", disabled=not st.session_state.get("executing")):
-    # if st.button("停止任务"):
+    if st.button("停止", disabled=not st.session_state.get("executing"), use_container_width=True):
         pid = st.session_state.get("pid")
         if not st.session_state.executing:
             pid = None
@@ -306,11 +308,42 @@ st.markdown('</div>', unsafe_allow_html=True)
 def speech_to_text(audio_data):
     r = sr.Recognizer()
     try:
-        return r.recognize_google(audio_data, language="zh-CN")
+        print("🎧 audio keys:", audio.keys())
+        print("📏 sample_rate:", audio["sample_rate"])
+        print("📦 audio bytes type:", type(audio["bytes"]), "len:", len(audio["bytes"]))
+
+        import magic  # 用于检测MIME类型
+        mime_type = magic.from_buffer(audio['bytes'], mime=True)
+        print("🔍 Detected MIME type:", mime_type)
+
+        # 判断是否为原始 PCM 格式
+        is_pcm = mime_type in ["audio/L16", "audio/basic", "audio/x-wav", "audio/raw"]
+
+        if not is_pcm:
+            print("🎼 非PCM格式，开始转换为16kHz PCM mono...")
+            # 非 PCM，则先转换成识别友好格式
+            audio_segment = AudioSegment.from_file(io.BytesIO(audio["bytes"]), format="webm")
+            pcm_audio = audio_segment.set_frame_rate(16000).set_channels(1).set_sample_width(2)
+            raw_audio = pcm_audio.raw_data
+            sample_rate = pcm_audio.frame_rate
+            sample_width = pcm_audio.sample_width
+        else:
+            print("✅ 已是PCM格式，直接使用原始字节")
+            raw_audio = audio["bytes"]
+            sample_rate = audio["sample_rate"]
+            sample_width = 2  # 一般是 16-bit PCM（2 字节），也可以从其他字段获取更精确
+
+        # 构造 speech_recognition 可识别的 AudioData
+        recognizer = sr.Recognizer()
+        audio_data = sr.AudioData(raw_audio, sample_rate, sample_width)
+        return recognizer.recognize_google(audio_data, language="zh-CN"), None
+
     except sr.UnknownValueError:
-        return "无法识别语音"
+        return "", "无法识别语音"
     except sr.RequestError as e:
-        return f"语音服务请求失败: {e}"
+        return "", f"语音服务请求失败: {e}"
+    except Exception as e:
+        return "", f"语音识别处理错误: {e}"
 
 
 # 处理文本发送
@@ -328,14 +361,20 @@ if audio and not st.session_state.input_disabled:
     st.session_state.voice_active = True
     with st.chat_message("user"):
         st.markdown("🎤 正在识别语音...")
-    audio_data = sr.AudioData(audio["bytes"], sample_rate=audio["sample_rate"], sample_width=2)
-    recognized_text = speech_to_text(audio_data)
-    st.session_state.messages.append({"role": "user", "content": recognized_text})
-    st.session_state.task_to_execute = recognized_text
-    st.session_state.input_disabled = True
-    st.session_state.executing = True
-    st.session_state.voice_active = False
-    st.rerun()
+
+    recognized_text, recognized_text_error = speech_to_text(audio)
+    if not recognized_text_error:
+        st.session_state.messages.append({"role": "user", "content": recognized_text})
+        st.session_state.task_to_execute = recognized_text
+        st.session_state.executing = True
+        st.session_state.voice_active = False
+        st.rerun()
+    else:
+        st.error(recognized_text_error + " 3秒后自动重置")
+        st.session_state.voice_active = False
+        st.session_state.input_disabled = False
+        time.sleep(3)
+        st.rerun()
 
 #处理chat_input
 if user_text and not st.session_state.input_disabled:
