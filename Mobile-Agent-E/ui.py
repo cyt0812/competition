@@ -21,6 +21,9 @@ for key, default_value in {
     "pid": None,
     "text_active": False,
     "voice_active": False,
+    "begin_execution": False,
+    "audio": None,
+    "audio_data": None,
 }.items():
     if key not in st.session_state:
         st.session_state[key] = default_value
@@ -158,6 +161,14 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 ADB_PATH = os.environ.get("ADB_PATH", default="adb")
 
+def reset():
+    st.session_state.executing = False
+    st.session_state.begin_execution = False
+    st.session_state.input_disabled = False
+    st.session_state.task_to_execute = None
+    st.session_state.text_active = False
+    st.session_state.voice_active = False
+
 # 侧边栏
 with st.sidebar:
     st.header("🕘 历史对话")
@@ -176,14 +187,14 @@ with st.sidebar:
         st.info("暂无对话记录")
 
     # 添加清空按钮
-    if st.button("🧹 清空记录",disabled= st.session_state.get("executing"),use_container_width=True):
+    if st.button("🧹 清空记录",disabled= st.session_state.get("executing") or st.session_state.get("input_disabled"),use_container_width=True):
         st.session_state.messages = []
         st.rerun()
 
     # 添加ADB测试按钮到侧栏
     st.write(f"**运行前请先点击ADB测试按钮↓**")
     command_adb = ADB_PATH + " devices"
-    if st.button("📱 ADB测试",disabled= st.session_state.get("executing"), use_container_width=True):
+    if st.button("📱 ADB测试",disabled= st.session_state.get("executing") or st.session_state.get("input_disabled"), use_container_width=True):
         try:
             result = subprocess.check_output(command_adb, shell=True, text=True)
             device_num = result.count("device") - 1
@@ -237,9 +248,8 @@ with input_cols[0]:
 
 with input_cols[1]:
     mic_disabled = st.session_state.input_disabled or st.session_state.text_active
-    audio = None
     if not mic_disabled:
-        audio = mic_recorder(
+        st.session_state.audio = mic_recorder(
             start_prompt="🎤",
             stop_prompt="⏹️",
             just_once=True,
@@ -257,12 +267,7 @@ with input_cols[2]:
             try:
                 p = psutil.Process(pid)
                 p.terminate()  # 或 p.kill()
-                st.session_state.executing = False
-                st.session_state.begin_execution = False
-                st.session_state.input_disabled = False
-                st.session_state.task_to_execute = None
-                st.session_state.text_active = False
-                st.session_state.voice_active = False
+                reset()
                 st.success("任务已终止")
                 st.rerun()  # 刷新 UI，恢复输入状态
             except Exception as e:
@@ -272,10 +277,18 @@ with input_cols[2]:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
+#语音输入后rerun以在识别期间禁用按钮
+if st.session_state.audio:
+    st.session_state.audio_data=st.session_state.audio
+    st.session_state.audio = None
+    st.session_state.input_disabled = True
+    st.session_state.voice_active = True
+    st.rerun()
+
 #语音转文字
 def speech_to_text(audio_data):
     try:
-        mime_type = magic.from_buffer(audio['bytes'], mime=True)
+        mime_type = magic.from_buffer(audio_data['bytes'], mime=True)
         print("🔍 Detected MIME type:", mime_type)
 
         # 判断是否为原始 PCM 格式
@@ -284,15 +297,15 @@ def speech_to_text(audio_data):
         if not is_pcm:
             print("🎼 非PCM格式，开始转换为16kHz PCM mono...")
             # 非 PCM，则先转换成识别友好格式
-            audio_segment = AudioSegment.from_file(io.BytesIO(audio["bytes"]), format="webm")
+            audio_segment = AudioSegment.from_file(io.BytesIO(audio_data["bytes"]), format="webm")
             pcm_audio = audio_segment.set_frame_rate(16000).set_channels(1).set_sample_width(2)
             raw_audio = pcm_audio.raw_data
             sample_rate = pcm_audio.frame_rate
             sample_width = pcm_audio.sample_width
         else:
             print("✅ 已是PCM格式，直接使用原始字节")
-            raw_audio = audio["bytes"]
-            sample_rate = audio["sample_rate"]
+            raw_audio = audio_data["bytes"]
+            sample_rate = audio_data["sample_rate"]
             sample_width = 2  # 一般是 16-bit PCM（2 字节），也可以从其他字段获取更精确
 
         # 构造 speech_recognition 可识别的 AudioData
@@ -308,23 +321,25 @@ def speech_to_text(audio_data):
         return "", f"语音识别处理错误: {e}"
 
 # 处理语音输入
-if audio and not st.session_state.input_disabled:
-    st.session_state.voice_active = True
+if st.session_state.audio_data and st.session_state.voice_active:
+    st.session_state.input_disabled = True
     with st.chat_message("user"):
         st.markdown("🎤 正在识别语音...")
 
-    recognized_text, recognized_text_error = speech_to_text(audio)
+    recognized_text, recognized_text_error = speech_to_text(st.session_state.audio_data)
     if not recognized_text_error:
         st.session_state.messages.append({"role": "user", "content": recognized_text})
         st.session_state.task_to_execute = recognized_text
         st.session_state.executing = True
         st.session_state.voice_active = False
+        st.session_state.audio_data=None
         st.rerun()
     else:
-        st.error(recognized_text_error + " 3秒后自动重置")
+        st.error(recognized_text_error + " 5秒后自动重置")
         st.session_state.voice_active = False
+        st.session_state.audio_data=None
         st.session_state.input_disabled = False
-        time.sleep(3)
+        time.sleep(5)
         st.rerun()
 
 #处理chat_input
@@ -357,12 +372,6 @@ def load_task_instructions(file_path):
         return []
     return [sub_task.get("instruction", "") for sub_task in data.get("tasks", []) if sub_task.get("instruction")]
 
-# 聊天状态初始化
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-if "executing" not in st.session_state:
-    st.session_state.executing = False
-
 # 处理话费充值按钮点击
 if bill_clicked and not st.session_state.input_disabled:
     instructions = load_task_instructions("data/Mobile-Eval-E/China_Union_bill_tasks.json")
@@ -383,37 +392,17 @@ if reward_clicked and not st.session_state.input_disabled:
         st.session_state.executing = True
         st.rerun()
 
-if "pid" not in st.session_state:
-    st.session_state.pid = None
-if "begin_execution" not in st.session_state:
-    st.session_state.begin_execution = False
-
-if "begin_execution" not in st.session_state:
-    st.session_state.begin_execution = True
-if "pid" not in st.session_state:
-    st.session_state.pid = None
-
 # 执行任务逻辑（核心修改：处理编码问题）
 if st.session_state.task_to_execute and st.session_state.executing and not st.session_state.begin_execution:
     st.session_state.begin_execution = True
     prompt = st.session_state.task_to_execute
     if not prompt or not isinstance(prompt, str) or not prompt.strip():
         st.error("❌ 任务指令为空或无效")
-        st.session_state.executing = False
-        st.session_state.input_disabled = False
-        st.session_state.task_to_execute = None
-        st.session_state.text_active = False
-        st.session_state.voice_active = False
-        st.session_state.begin_execution = False
+        reset()
         st.rerun()
     if not os.path.exists("run.py"):
         st.error("❌ run.py 文件不存在")
-        st.session_state.executing = False
-        st.session_state.input_disabled = False
-        st.session_state.task_to_execute = None
-        st.session_state.text_active = False
-        st.session_state.voice_active = False
-        st.session_state.begin_execution = False
+        reset()
         st.stop()
 
     with st.chat_message("assistant"):
@@ -518,11 +507,6 @@ if st.session_state.task_to_execute and st.session_state.executing and not st.se
         st.session_state.messages.append(
             {"role": "assistant", "content": "```\n" + "".join(output_lines) + "\n```"}
         )
-    st.session_state.executing = False
-    st.session_state.input_disabled = False
-    st.session_state.task_to_execute = None
-    st.session_state.text_active = False
-    st.session_state.voice_active = False
-    st.session_state.begin_execution = False
+    reset()
     st.success("✅ 任务完成，输入已恢复")
     st.rerun()
