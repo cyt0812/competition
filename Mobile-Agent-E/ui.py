@@ -298,14 +298,14 @@ def speech_to_text(audio_data):
         # 构造 speech_recognition 可识别的 AudioData
         recognizer = sr.Recognizer()
         audio_data = sr.AudioData(raw_audio, sample_rate, sample_width)
-        return recognizer.recognize_google(audio_data, language="zh-CN")
+        return recognizer.recognize_google(audio_data, language="zh-CN"), None
 
     except sr.UnknownValueError:
-        return "无法识别语音"
+        return "", "无法识别语音"
     except sr.RequestError as e:
-        return f"语音服务请求失败: {e}"
+        return "", f"语音服务请求失败: {e}"
     except Exception as e:
-        return f"语音识别处理错误: {e}"
+        return "", f"语音识别处理错误: {e}"
 
 # 处理语音输入
 if audio and not st.session_state.input_disabled:
