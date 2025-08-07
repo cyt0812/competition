@@ -215,7 +215,12 @@ with mode_task_cols[1]:
         help="余额低于20元时充值",
         use_container_width=True
     )
-
+    # st.markdown("""
+    # <script>
+    #     document.querySelector('[data-testid="stButton"]:nth-of-type(3) button')
+    #         .classList.add('small-task-btn');
+    # </script>
+    # """, unsafe_allow_html=True)
 with mode_task_cols[2]:
     reward_clicked = st.button(
         "权益领取",
@@ -224,10 +229,25 @@ with mode_task_cols[2]:
         help="联通权益领取",
         use_container_width=True
     )
+    # st.markdown("""
+    # <script>
+    #     document.querySelector('[data-testid="stButton"]:nth-of-type(4) button')
+    #         .classList.add('small-task-btn');
+    # </script>
+    # """, unsafe_allow_html=True)
 
 #输入框以及语音输入，发送，停止三个按钮
 input_cols = st.columns([10, 1, 1], gap="small")
 with input_cols[0]:
+
+    # user_text = st.text_input(
+    #     "",
+    #     key="custom_input",
+    #     placeholder="请输入任务指令，例如：用微信发送信息“你好”给联系人XXX",
+    #     disabled=st.session_state.input_disabled or st.session_state.voice_active,
+    #     label_visibility="collapsed",
+    # )
+
     user_text = st.chat_input(
         placeholder="请输入任务指令，例如：打开微信并发送一条消息",
         key="custom_input",
@@ -246,6 +266,9 @@ with input_cols[1]:
         )
     else:
         st.button("🎤", disabled=True, use_container_width=True)
+# with input_cols[2]:
+#     send_disabled = st.session_state.input_disabled or st.session_state.voice_active
+#     send_clicked = st.button("发送", use_container_width=True, disabled=send_disabled)
 
 with input_cols[2]:
     if st.button("停止", disabled=not st.session_state.get("executing"), use_container_width=True):
@@ -269,10 +292,21 @@ with input_cols[2]:
         else:
             st.warning("没有可终止的任务")
 
+# st.markdown("""
+# <script>
+#     document.querySelector('[data-testid="stButton"]:nth-of-type(5) button')
+#         .classList.add('main-btn');
+#     document.querySelector('.mic-recorder-container button')
+#         .classList.add('main-btn');
+#     document.querySelectorAll('button:disabled')
+#         .forEach(btn => btn.classList.add('disabled-btn'));
+# </script>
+# """, unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 使用 pydub + speech_recognition 实现 webm 语音识别
-def speech_to_text(audio):
+#语音转文字
+def speech_to_text(audio_data):
+    r = sr.Recognizer()
     try:
         print("🎧 audio keys:", audio.keys())
         print("📏 sample_rate:", audio["sample_rate"])
@@ -311,8 +345,19 @@ def speech_to_text(audio):
     except Exception as e:
         return f"语音识别处理错误: {e}"
 
+
+# 处理文本发送
+# if send_clicked and not st.session_state.input_disabled:
+#     if user_text.strip():
+#         st.session_state.text_active = True
+#         st.session_state.messages.append({"role": "user", "content": user_text.strip()})
+#         st.session_state.task_to_execute = user_text.strip()
+#         st.session_state.input_disabled = True
+#         st.session_state.executing = True
+#         st.rerun()
+
+# 处理语音输入
 if audio and not st.session_state.input_disabled:
-    st.session_state.input_disabled = True
     st.session_state.voice_active = True
     with st.chat_message("user"):
         st.markdown("🎤 正在识别语音...")
@@ -436,6 +481,16 @@ if st.session_state.task_to_execute and st.session_state.executing and not st.se
             )
             st.session_state.pid = process.pid
 
+            # 初始化模块标记
+            module_flags = {
+                'Perceptor': False,
+                'Manager': False,
+                'Operator': False,
+                'Action Reflector': False,
+                'NoteKeeper': False,
+                'Experience Reflector': False
+            }
+
             # 读取二进制输出并尝试多编码解码
             for line in process.stdout:
                 try:
@@ -444,12 +499,66 @@ if st.session_state.task_to_execute and st.session_state.executing and not st.se
                 except UnicodeDecodeError:
                     # 失败则尝试GBK
                     decoded_line = line.decode('gbk', errors='replace')
-                output_lines.append(decoded_line)
-                message_placeholder.markdown("```\n" + "".join(output_lines) + "\n```")
+
+                # 根据显示模式过滤和格式化日志
+                display_line = True
+                formatted_line = decoded_line
+
+                # 检测模块标识（不区分大小写）
+                for module in module_flags:
+                    if module.lower() in decoded_line.lower() and 'thinking' not in decoded_line.lower():
+                        module_flags[module] = True
+                        for m in module_flags:
+                            if m != module:
+                                module_flags[m] = False
+                        break
+
+                # 检查是否为关键步骤并标蓝
+                formatted_line = decoded_line
+                
+                # 定义模块与关键词的对应关系
+                module_keywords = {
+                    'Manager': ['Current Subgoal:'],
+                    'Operator': ['Executing atomic action:'],
+                    'Action Reflector': ['Progress Status:'],
+                    'Experience Reflector': ['Progress Logs:', 'Finish Thought:']
+                    # Perceptor 和 NoteKeeper 模块没有需要标蓝的关键步骤
+                }
+                
+                # 检查当前活动模块，并匹配对应关键词（不区分大小写）
+                for module, keywords in module_keywords.items():
+                    if module_flags[module]:
+                        for keyword in keywords:
+                            if keyword.lower() in decoded_line.lower():
+                                # 转义可能影响HTML的特殊字符
+                                escaped_line = decoded_line.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                                formatted_line = f'<span style="color: blue;">{escaped_line}</span>'
+                                break
+                        break  # 找到活动模块后退出循环
+
+                if display_line:
+                    output_lines.append(formatted_line)
+
+                # 更新显示
+                message_placeholder.markdown("<pre>" + "".join(output_lines) + "</pre>", unsafe_allow_html=True)
+
             process.wait()
+
+            # 结果状态颜色
+            result_color = 'green'
+            if process.returncode != 0 or any('执行失败' in line for line in output_lines):
+                result_color = 'red'
+
+            # 添加结果状态
+            result_line = f'<span style="color: {result_color};">任务{"成功完成" if result_color == "green" else "执行失败"}</span>'
+            output_lines.append(result_line)
+            message_placeholder.markdown("<pre>" + "".join(output_lines) + "</pre>", unsafe_allow_html=True)
         except Exception as e:
             output_lines.append(f"\n执行失败：{str(e)}")
-            message_placeholder.markdown("```\n" + "".join(output_lines) + "\n```")
+            # 异常情况下结果状态为红色
+            result_line = '<span style="color: red;">任务执行失败</span>'
+            output_lines.append(result_line)
+            message_placeholder.markdown("<pre>" + "".join(output_lines) + "</pre>", unsafe_allow_html=True)
 
         st.session_state.messages.append(
             {"role": "assistant", "content": "```\n" + "".join(output_lines) + "\n```"}
