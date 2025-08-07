@@ -5,6 +5,7 @@ import os
 import speech_recognition as sr
 from streamlit_mic_recorder import mic_recorder
 from pydub import AudioSegment
+import magic  # 用于检测MIME类型
 import io
 import json
 import time
@@ -306,13 +307,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 #语音转文字
 def speech_to_text(audio_data):
-    r = sr.Recognizer()
     try:
-        print("🎧 audio keys:", audio.keys())
-        print("📏 sample_rate:", audio["sample_rate"])
-        print("📦 audio bytes type:", type(audio["bytes"]), "len:", len(audio["bytes"]))
-
-        import magic  # 用于检测MIME类型
         mime_type = magic.from_buffer(audio['bytes'], mime=True)
         print("🔍 Detected MIME type:", mime_type)
 
@@ -344,17 +339,6 @@ def speech_to_text(audio_data):
         return "", f"语音服务请求失败: {e}"
     except Exception as e:
         return "", f"语音识别处理错误: {e}"
-
-
-# 处理文本发送
-# if send_clicked and not st.session_state.input_disabled:
-#     if user_text.strip():
-#         st.session_state.text_active = True
-#         st.session_state.messages.append({"role": "user", "content": user_text.strip()})
-#         st.session_state.task_to_execute = user_text.strip()
-#         st.session_state.input_disabled = True
-#         st.session_state.executing = True
-#         st.rerun()
 
 # 处理语音输入
 if audio and not st.session_state.input_disabled:
@@ -436,8 +420,6 @@ if "pid" not in st.session_state:
     st.session_state.pid = None
 if "begin_execution" not in st.session_state:
     st.session_state.begin_execution = False
-
-
 
 if "begin_execution" not in st.session_state:
     st.session_state.begin_execution = True
