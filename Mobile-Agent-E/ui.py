@@ -5,6 +5,7 @@ import os
 import speech_recognition as sr
 from streamlit_mic_recorder import mic_recorder
 from pydub import AudioSegment
+import magic  # 用于检测MIME类型
 import io
 import json
 import time
@@ -215,12 +216,7 @@ with mode_task_cols[1]:
         help="余额低于20元时充值",
         use_container_width=True
     )
-    # st.markdown("""
-    # <script>
-    #     document.querySelector('[data-testid="stButton"]:nth-of-type(3) button')
-    #         .classList.add('small-task-btn');
-    # </script>
-    # """, unsafe_allow_html=True)
+
 with mode_task_cols[2]:
     reward_clicked = st.button(
         "权益领取",
@@ -229,25 +225,10 @@ with mode_task_cols[2]:
         help="联通权益领取",
         use_container_width=True
     )
-    # st.markdown("""
-    # <script>
-    #     document.querySelector('[data-testid="stButton"]:nth-of-type(4) button')
-    #         .classList.add('small-task-btn');
-    # </script>
-    # """, unsafe_allow_html=True)
 
 #输入框以及语音输入，发送，停止三个按钮
 input_cols = st.columns([10, 1, 1], gap="small")
 with input_cols[0]:
-
-    # user_text = st.text_input(
-    #     "",
-    #     key="custom_input",
-    #     placeholder="请输入任务指令，例如：用微信发送信息“你好”给联系人XXX",
-    #     disabled=st.session_state.input_disabled or st.session_state.voice_active,
-    #     label_visibility="collapsed",
-    # )
-
     user_text = st.chat_input(
         placeholder="请输入任务指令，例如：打开微信并发送一条消息",
         key="custom_input",
@@ -266,9 +247,6 @@ with input_cols[1]:
         )
     else:
         st.button("🎤", disabled=True, use_container_width=True)
-# with input_cols[2]:
-#     send_disabled = st.session_state.input_disabled or st.session_state.voice_active
-#     send_clicked = st.button("发送", use_container_width=True, disabled=send_disabled)
 
 with input_cols[2]:
     if st.button("停止", disabled=not st.session_state.get("executing"), use_container_width=True):
@@ -292,27 +270,11 @@ with input_cols[2]:
         else:
             st.warning("没有可终止的任务")
 
-# st.markdown("""
-# <script>
-#     document.querySelector('[data-testid="stButton"]:nth-of-type(5) button')
-#         .classList.add('main-btn');
-#     document.querySelector('.mic-recorder-container button')
-#         .classList.add('main-btn');
-#     document.querySelectorAll('button:disabled')
-#         .forEach(btn => btn.classList.add('disabled-btn'));
-# </script>
-# """, unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 #语音转文字
 def speech_to_text(audio_data):
-    r = sr.Recognizer()
     try:
-        print("🎧 audio keys:", audio.keys())
-        print("📏 sample_rate:", audio["sample_rate"])
-        print("📦 audio bytes type:", type(audio["bytes"]), "len:", len(audio["bytes"]))
-
-        import magic  # 用于检测MIME类型
         mime_type = magic.from_buffer(audio['bytes'], mime=True)
         print("🔍 Detected MIME type:", mime_type)
 
@@ -336,25 +298,14 @@ def speech_to_text(audio_data):
         # 构造 speech_recognition 可识别的 AudioData
         recognizer = sr.Recognizer()
         audio_data = sr.AudioData(raw_audio, sample_rate, sample_width)
-        return recognizer.recognize_google(audio_data, language="zh-CN"), None
+        return recognizer.recognize_google(audio_data, language="zh-CN")
 
     except sr.UnknownValueError:
-        return "", "无法识别语音"
+        return "无法识别语音"
     except sr.RequestError as e:
-        return "", f"语音服务请求失败: {e}"
+        return f"语音服务请求失败: {e}"
     except Exception as e:
-        return "", f"语音识别处理错误: {e}"
-
-
-# 处理文本发送
-# if send_clicked and not st.session_state.input_disabled:
-#     if user_text.strip():
-#         st.session_state.text_active = True
-#         st.session_state.messages.append({"role": "user", "content": user_text.strip()})
-#         st.session_state.task_to_execute = user_text.strip()
-#         st.session_state.input_disabled = True
-#         st.session_state.executing = True
-#         st.rerun()
+        return f"语音识别处理错误: {e}"
 
 # 处理语音输入
 if audio and not st.session_state.input_disabled:
@@ -436,8 +387,6 @@ if "pid" not in st.session_state:
     st.session_state.pid = None
 if "begin_execution" not in st.session_state:
     st.session_state.begin_execution = False
-
-
 
 if "begin_execution" not in st.session_state:
     st.session_state.begin_execution = True
