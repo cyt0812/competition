@@ -216,12 +216,7 @@ with mode_task_cols[1]:
         help="余额低于20元时充值",
         use_container_width=True
     )
-    # st.markdown("""
-    # <script>
-    #     document.querySelector('[data-testid="stButton"]:nth-of-type(3) button')
-    #         .classList.add('small-task-btn');
-    # </script>
-    # """, unsafe_allow_html=True)
+
 with mode_task_cols[2]:
     reward_clicked = st.button(
         "权益领取",
@@ -230,25 +225,10 @@ with mode_task_cols[2]:
         help="联通权益领取",
         use_container_width=True
     )
-    # st.markdown("""
-    # <script>
-    #     document.querySelector('[data-testid="stButton"]:nth-of-type(4) button')
-    #         .classList.add('small-task-btn');
-    # </script>
-    # """, unsafe_allow_html=True)
 
 #输入框以及语音输入，发送，停止三个按钮
 input_cols = st.columns([10, 1, 1], gap="small")
 with input_cols[0]:
-
-    # user_text = st.text_input(
-    #     "",
-    #     key="custom_input",
-    #     placeholder="请输入任务指令，例如：用微信发送信息“你好”给联系人XXX",
-    #     disabled=st.session_state.input_disabled or st.session_state.voice_active,
-    #     label_visibility="collapsed",
-    # )
-
     user_text = st.chat_input(
         placeholder="请输入任务指令，例如：打开微信并发送一条消息",
         key="custom_input",
@@ -267,9 +247,6 @@ with input_cols[1]:
         )
     else:
         st.button("🎤", disabled=True, use_container_width=True)
-# with input_cols[2]:
-#     send_disabled = st.session_state.input_disabled or st.session_state.voice_active
-#     send_clicked = st.button("发送", use_container_width=True, disabled=send_disabled)
 
 with input_cols[2]:
     if st.button("停止", disabled=not st.session_state.get("executing"), use_container_width=True):
@@ -293,16 +270,6 @@ with input_cols[2]:
         else:
             st.warning("没有可终止的任务")
 
-# st.markdown("""
-# <script>
-#     document.querySelector('[data-testid="stButton"]:nth-of-type(5) button')
-#         .classList.add('main-btn');
-#     document.querySelector('.mic-recorder-container button')
-#         .classList.add('main-btn');
-#     document.querySelectorAll('button:disabled')
-#         .forEach(btn => btn.classList.add('disabled-btn'));
-# </script>
-# """, unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 #语音转文字
