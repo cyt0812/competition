@@ -546,7 +546,13 @@ if st.session_state.task_to_execute and st.session_state.executing and not st.se
 
             # 结果状态颜色
             result_color = 'green'
-            if process.returncode != 0 or any('执行失败' in line for line in output_lines):
+            # 改进：仅在错误日志中明确描述失败原因时才标识任务失败
+            # 匹配格式如：ERROR: [Errno 2] No such file or directory: './screenshot/screenshot.png'
+            if (process.returncode != 0 or 
+                any('执行失败' in line for line in output_lines) or 
+                any('ERROR:' in line and len(line.split('ERROR:', 1)) > 1 and line.split('ERROR:', 1)[1].strip() for line in output_lines) or 
+                (any('error' in line.lower() for line in output_lines) and 
+                 not any('Error Description: None' in line for line in output_lines))):
                 result_color = 'red'
 
             # 添加结果状态
