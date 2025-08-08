@@ -146,11 +146,12 @@ st.markdown(
 # 标题和logo
 col1, col2 = st.columns([1, 5])
 with col1:
-    st.image("logo/logo6.png", width=80)
+    if os.path.exists("logo/logo6.png"):
+        st.image("logo/logo6.png", width=80)
 with col2:
     st.title("Mobile Agent Chat")
 
-# 聊天消息区
+# 聊天消息区（历史）
 st.markdown('<div id="chat-container">', unsafe_allow_html=True)
 for msg in st.session_state.messages:
     if msg["role"] == "user":
@@ -158,6 +159,10 @@ for msg in st.session_state.messages:
     else:
         st.markdown(f'<div class="chat-message-assistant">🤖 {msg["content"]}</div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
+
+# === 新增：专门的输出容器（位于页面流中，**在输入区之前**）
+# 所有流式执行输出都会渲染到 output_container，这样保证显示位置在输入区上方
+output_container = st.container()
 
 ADB_PATH = os.environ.get("ADB_PATH", default="adb")
 
@@ -214,7 +219,7 @@ with st.sidebar:
             st.error("❌ ADB 工具未安装或未添加到环境变量")
             st.code(e.output)
 
-# 底部输入区
+# 底部输入区（固定）
 st.markdown('<div id="input-area">', unsafe_allow_html=True)
 mode_task_cols = st.columns([4, 1, 1])
 with mode_task_cols[0]:
@@ -392,7 +397,9 @@ if reward_clicked and not st.session_state.input_disabled:
         st.session_state.executing = True
         st.rerun()
 
-# 执行任务逻辑（核心修改：处理编码问题）
+# --------------------------
+# 任务执行逻辑（输出渲染到 output_container，保证位于输入之上）
+# --------------------------
 if st.session_state.task_to_execute and st.session_state.executing and not st.session_state.begin_execution:
     st.session_state.begin_execution = True
     prompt = st.session_state.task_to_execute
@@ -405,108 +412,138 @@ if st.session_state.task_to_execute and st.session_state.executing and not st.se
         reset()
         st.stop()
 
-    with st.chat_message("assistant"):
-        message_placeholder = st.empty()
-        message_placeholder.markdown("🎯 正在执行任务，请稍候...\n")
-        output_lines = []
-        try:
-            # 关键修改：以二进制模式读取，不指定encoding
-            process = subprocess.Popen(
-                ["python", "run.py", "--run_name", "ui-task", "--setting", "individual", "--instruction", prompt],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                bufsize=1
-            )
-            st.session_state.pid = process.pid
+    # 关键：把流式输出渲染到 output_container，保证它出现在所有输入组件的上方
+    with output_container:
+        with st.chat_message("assistant"):
+            message_placeholder = st.empty()
+            message_placeholder.markdown("🎯 正在执行任务，请稍候...\n")
+            output_lines = []
+            try:
+                # 使用 -u 保证 run.py 的 stdout 无缓冲（更可靠的流式输出）
+                process = subprocess.Popen(
+                    ["python", "-u", "run.py", "--run_name", "ui-task", "--setting", "individual", "--instruction", prompt],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    bufsize=1
+                )
+                st.session_state.pid = process.pid
 
-            # 初始化模块标记
-            module_flags = {
-                'Perceptor': False,
-                'Manager': False,
-                'Operator': False,
-                'Action Reflector': False,
-                'NoteKeeper': False,
-                'Experience Reflector': False
-            }
-
-            # 读取二进制输出并尝试多编码解码
-            for line in process.stdout:
-                try:
-                    # 优先UTF-8解码
-                    decoded_line = line.decode('utf-8')
-                except UnicodeDecodeError:
-                    # 失败则尝试GBK
-                    decoded_line = line.decode('gbk', errors='replace')
-
-                # 根据显示模式过滤和格式化日志
-                display_line = True
-                formatted_line = decoded_line
-
-                # 检测模块标识（不区分大小写）
-                for module in module_flags:
-                    if module.lower() in decoded_line.lower() and 'thinking' not in decoded_line.lower():
-                        module_flags[module] = True
-                        for m in module_flags:
-                            if m != module:
-                                module_flags[m] = False
-                        break
-
-                # 检查是否为关键步骤并标蓝
-                formatted_line = decoded_line
-                
-                # 定义模块与关键词的对应关系
-                module_keywords = {
-                    'Manager': ['Current Subgoal:'],
-                    'Operator': ['Executing atomic action:'],
-                    'Action Reflector': ['Progress Status:'],
-                    'Experience Reflector': ['Progress Logs:', 'Finish Thought:']
-                    # Perceptor 和 NoteKeeper 模块没有需要标蓝的关键步骤
+                # 初始化模块标记
+                module_flags = {
+                    'Perceptor': False,
+                    'Manager': False,
+                    'Operator': False,
+                    'Action Reflector': False,
+                    'NoteKeeper': False,
+                    'Experience Reflector': False
                 }
-                
-                # 检查当前活动模块，并匹配对应关键词（不区分大小写）
-                for module, keywords in module_keywords.items():
-                    if module_flags[module]:
-                        for keyword in keywords:
-                            if keyword.lower() in decoded_line.lower():
-                                # 转义可能影响HTML的特殊字符
-                                escaped_line = decoded_line.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-                                formatted_line = f'<span style="color: blue;">{escaped_line}</span>'
-                                break
-                        break  # 找到活动模块后退出循环
 
-                if display_line:
-                    output_lines.append(formatted_line)
+                # 逐行读取二进制输出并尝试多编码解码
+                for raw in iter(process.stdout.readline, b''):
+                    if not raw:
+                        break
+                    try:
+                        decoded_line = raw.decode('utf-8')
+                    except UnicodeDecodeError:
+                        decoded_line = raw.decode('gbk', errors='replace')
+                    display_line = True
+                    formatted_line = decoded_line
 
-                # 更新显示
-                message_placeholder.markdown("<pre>" + "".join(output_lines) + "</pre>", unsafe_allow_html=True)
+                    # 检测模块标识（不区分大小写）
+                    for module in module_flags:
+                        if module.lower() in decoded_line.lower() and 'thinking' not in decoded_line.lower():
+                            module_flags[module] = True
+                            for m in module_flags:
+                                if m != module:
+                                    module_flags[m] = False
+                            break
 
-            process.wait()
+                    # 检查是否为关键步骤并标蓝
+                    formatted_line = decoded_line
+                    module_keywords = {
+                        'Manager': ['Current Subgoal:'],
+                        'Operator': ['Executing atomic action:'],
+                        'Action Reflector': ['Progress Status:'],
+                        'Experience Reflector': ['Progress Logs:', 'Finish Thought:']
+                        # Perceptor 和 NoteKeeper 模块没有需要标蓝的关键步骤
+                    }
 
-            # 结果状态颜色
-            result_color = 'green'
-            # 改进：仅在错误日志中明确描述失败原因时才标识任务失败
-            # 匹配格式如：ERROR: [Errno 2] No such file or directory: './screenshot/screenshot.png'
-            if (process.returncode != 0 or 
-                any('执行失败' in line for line in output_lines) or 
-                any('ERROR:' in line and len(line.split('ERROR:', 1)) > 1 and line.split('ERROR:', 1)[1].strip() for line in output_lines) or 
-                (any('error' in line.lower() for line in output_lines) and 
-                 not any('Error Description: None' in line for line in output_lines))):
-                result_color = 'red'
+                    # 检查当前活动模块，并匹配对应关键词（不区分大小写）
+                    for module, keywords in module_keywords.items():
+                        if module_flags[module]:
+                            for keyword in keywords:
+                                if keyword.lower() in decoded_line.lower():
+                                    # 转义可能影响HTML的特殊字符
+                                    escaped_line = decoded_line.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                                    formatted_line = f'<span style="color: blue;">{escaped_line}</span>'
+                                    break
+                            break    # 找到活动模块后退出循环
 
-            # 添加结果状态
-            result_line = f'<span style="color: {result_color};">任务{"成功完成" if result_color == "green" else "执行失败"}</span>'
-            output_lines.append(result_line)
-            message_placeholder.markdown("<pre>" + "".join(output_lines) + "</pre>", unsafe_allow_html=True)
-        except Exception as e:
-            output_lines.append(f"\n执行失败：{str(e)}")
-            # 异常情况下结果状态为红色
-            result_line = '<span style="color: red;">任务执行失败</span>'
-            output_lines.append(result_line)
-            message_placeholder.markdown("<pre>" + "".join(output_lines) + "</pre>", unsafe_allow_html=True)
+                    if display_line:
+                        # 如果流中出现孤立的 "undefined" 字符串，我们仍然在流式显示时保留原样
+                        # （最终写入 messages 时会被清理）
+                        output_lines.append(formatted_line)
 
-        st.session_state.messages.append(
-            {"role": "assistant", "content": "```\n" + "".join(output_lines) + "\n```"}
-        )
+                    # 实时刷新到聊天占位（此处显示在 output_container）
+                    message_placeholder.markdown(
+                        "<div style='font-family: monospace; white-space: pre-wrap;'>" +
+                        "".join(output_lines) +
+                        "</div>",
+                        unsafe_allow_html=True
+                        )
+
+                process.wait()
+
+                # 结果状态颜色
+                result_color = 'green'
+                # 改进：仅在错误日志中明确描述失败原因时才标识任务失败
+                # 匹配格式如：ERROR: [Errno 2] No such file or directory: './screenshot/screenshot.png'
+                if (process.returncode != 0 or 
+                    any('执行失败' in line for line in output_lines) or 
+                    any('ERROR:' in line and len(line.split('ERROR:', 1)) > 1 and line.split('ERROR:', 1)[1].strip() for line in output_lines) or 
+                    (any('error' in line.lower() for line in output_lines) and 
+                    not any('Error Description: None' in line for line in output_lines))):
+                    result_color = 'red'
+
+                # 添加结果状态
+                result_line = f'<span style="color: {result_color};">任务{"成功完成" if result_color == "green" else "执行失败"}</span>'
+                output_lines.append(result_line)
+                message_placeholder.markdown(
+                "<div style='font-family: monospace; white-space: pre-wrap;'>" +
+                "".join(output_lines) +
+                "</div>",
+                unsafe_allow_html=True
+                )
+
+            except Exception as e:
+                error_line = f"<span style='color: red;'>执行失败：{str(e)}</span>"
+                output_lines.append(error_line)
+                message_placeholder.markdown(
+                    "<div style='font-family: monospace; white-space: pre-wrap;'>" +
+                    "".join(output_lines) +
+                    "</div>",
+                    unsafe_allow_html=True
+                )
+            finally:
+                # 写入 session_state.messages
+                clean_lines = [str(ln) for ln in output_lines if ln and str(ln).strip() not in ("", "undefined")]
+                final_text = "".join(clean_lines).rstrip()
+                if final_text == "":
+                    final_text = "（无输出）"
+
+                message_content = "```\n" + final_text + "\n```"
+                st.session_state.messages.append(
+                    {"role": "assistant", "content": message_content}
+                )
+
+                # 恢复状态
+                st.session_state.executing = False
+                st.session_state.input_disabled = False
+                st.session_state.task_to_execute = None
+                st.session_state.text_active = False
+                st.session_state.voice_active = False
+                st.session_state.pid = None
+
     reset()
     st.success("✅ 任务完成，输入已恢复")
     st.rerun()
