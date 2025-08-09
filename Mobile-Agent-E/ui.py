@@ -272,6 +272,17 @@ with input_cols[2]:
             try:
                 p = psutil.Process(pid)
                 p.terminate()  # 或 p.kill()
+
+                # 立即在 session_state messages 写入终止信息，保证新 run 能显示
+                if st.session_state.messages and st.session_state.messages[-1]["role"] == "assistant":
+                   # 把三反引号保持整洁地追加终止提示
+                    content = st.session_state.messages[-1]["content"]
+                    # 移除尾部多余的反引号然后追加
+                    content = content.rstrip("`") 
+                    st.session_state.messages[-1]["content"] = content + "\n<span style='color: orange;'>⚠️ 任务已手动终止</span>\n```"
+                else:
+                    st.session_state.messages.append({"role":"assistant","content":"\n<span style='color: orange;'>⚠️ 任务已手动终止</span>\n```"})
+
                 reset()
                 st.success("任务已终止")
                 st.rerun()  # 刷新 UI，恢复输入状态
@@ -438,6 +449,13 @@ if st.session_state.task_to_execute and st.session_state.executing and not st.se
                     'Experience Reflector': False
                 }
 
+                # 在启动 process 之前，确保有一个 assistant 条目可更新（持久化位）
+                if not st.session_state.messages or st.session_state.messages[-1]["role"] != "assistant":
+                    st.session_state.messages.append({"role": "assistant", "content": "```\n(执行中...)\n```"})
+                else:
+                    # 重置上一个 assistant 内容（可选）
+                    st.session_state.messages[-1]["content"] = "```\n(执行中...)\n```"
+
                 # 逐行读取二进制输出并尝试多编码解码
                 for raw in iter(process.stdout.readline, b''):
                     if not raw:
@@ -484,6 +502,12 @@ if st.session_state.task_to_execute and st.session_state.executing and not st.se
                         # （最终写入 messages 时会被清理）
                         output_lines.append(formatted_line)
 
+                    # 把当前进度写回 session_state，保证下次 rerun 还能看到最新进度
+                    try:
+                       st.session_state.messages[-1]["content"] = "```\n" + "".join(output_lines) + "\n```"
+                    except Exception:
+                       pass
+
                     # 实时刷新到聊天占位（此处显示在 output_container）
                     message_placeholder.markdown(
                         "<div style='font-family: monospace; white-space: pre-wrap;'>" +
@@ -508,6 +532,13 @@ if st.session_state.task_to_execute and st.session_state.executing and not st.se
                 # 添加结果状态
                 result_line = f'<span style="color: {result_color};">任务{"成功完成" if result_color == "green" else "执行失败"}</span>'
                 output_lines.append(result_line)
+
+                # 把当前进度写回 session_state，保证下次 rerun 还能看到最新进度
+                try:
+                    st.session_state.messages[-1]["content"] = "```\n" + "".join(output_lines) + "\n```"
+                except Exception:
+                    pass
+
                 message_placeholder.markdown(
                 "<div style='font-family: monospace; white-space: pre-wrap;'>" +
                 "".join(output_lines) +
@@ -518,31 +549,19 @@ if st.session_state.task_to_execute and st.session_state.executing and not st.se
             except Exception as e:
                 error_line = f"<span style='color: red;'>执行失败：{str(e)}</span>"
                 output_lines.append(error_line)
+                
+                # 把当前进度写回 session_state，保证下次 rerun 还能看到最新进度
+                try:
+                    st.session_state.messages[-1]["content"] = "```\n" + "".join(output_lines) + "\n```"
+                except Exception:
+                    pass
+
                 message_placeholder.markdown(
                     "<div style='font-family: monospace; white-space: pre-wrap;'>" +
                     "".join(output_lines) +
                     "</div>",
                     unsafe_allow_html=True
                 )
-            finally:
-                # 写入 session_state.messages
-                clean_lines = [str(ln) for ln in output_lines if ln and str(ln).strip() not in ("", "undefined")]
-                final_text = "".join(clean_lines).rstrip()
-                if final_text == "":
-                    final_text = "（无输出）"
-
-                message_content = "```\n" + final_text + "\n```"
-                st.session_state.messages.append(
-                    {"role": "assistant", "content": message_content}
-                )
-
-                # 恢复状态
-                st.session_state.executing = False
-                st.session_state.input_disabled = False
-                st.session_state.task_to_execute = None
-                st.session_state.text_active = False
-                st.session_state.voice_active = False
-                st.session_state.pid = None
 
     reset()
     st.success("✅ 任务完成，输入已恢复")
