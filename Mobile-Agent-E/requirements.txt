@@ -13,7 +13,7 @@ simplejson
 addict
 termcolor
 shapely
-datasets
+datasets==2.19.1
 modelscope
 matplotlib
 dashscope
