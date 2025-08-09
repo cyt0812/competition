@@ -221,15 +221,16 @@ with st.sidebar:
 
 # 底部输入区（固定）
 st.markdown('<div id="input-area">', unsafe_allow_html=True)
-mode_task_cols = st.columns([4, 1, 1])
+#mode_task_cols = st.columns([4, 1, 1])
+mode_task_cols = st.columns([8] + [4] * 4 + [2] * 5)
 with mode_task_cols[0]:
     st.markdown("<div style='height: 38px;'></div>", unsafe_allow_html=True)
 with mode_task_cols[1]:
     bill_clicked = st.button(
-        "联通话费充值",
+        "话费充值",
         key="bill_btn",
         disabled=st.session_state.input_disabled,
-        help="余额低于20元时充值",
+        help="查询联通话费，余额低于20元时充值",
         use_container_width=True
     )
 
@@ -238,7 +239,70 @@ with mode_task_cols[2]:
         "权益领取",
         key="reward_btn",
         disabled=st.session_state.input_disabled,
-        help="联通权益领取",
+        help="联通权益自动领取",
+        use_container_width=True
+    )
+
+with mode_task_cols[3]:
+    billinfo_clicked = st.button(
+        "账单查询",
+        key="billinfo_btn",
+        disabled=st.session_state.input_disabled,
+        help="联通详细账单查询",
+        use_container_width=True
+    )
+
+with mode_task_cols[4]:
+    harassment_clicked = st.button(
+        "电话拦截",
+        key="harassment_btn",
+        disabled=st.session_state.input_disabled,
+        help="联通设置电话拦截",
+        use_container_width=True
+    )
+
+with mode_task_cols[5]:
+    Suishouji_clicked = st.button(
+        "记账",
+        key="suishouji_btn",
+        disabled=st.session_state.input_disabled,
+        help="随手记记账",
+        use_container_width=True
+    )
+
+with mode_task_cols[6]:
+    Taobao_clicked = st.button(
+        "淘宝",
+        key="Taobao_btn",
+        disabled=st.session_state.input_disabled,
+        help="淘宝挑选飞鸟集",
+        use_container_width=True
+    )
+
+with mode_task_cols[7]:
+    meituan_clicked = st.button(
+        "美团",
+        key="meituan_btn",
+        disabled=st.session_state.input_disabled,
+        help="美团点黄焖鸡米饭的外卖",
+        use_container_width=True
+    )
+
+with mode_task_cols[8]:
+    webchat_clicked = st.button(
+        "微信",
+        key="webchat_btn",
+        disabled=st.session_state.input_disabled,
+        help="微信发朋友圈",
+        use_container_width=True
+    )
+
+with mode_task_cols[9]:
+    Weather_clicked = st.button(
+        "天气",
+        key="Weather_btn",
+        disabled=st.session_state.input_disabled,
+        help="查询天气记录到Note",
         use_container_width=True
     )
 
@@ -391,8 +455,8 @@ if user_text and not st.session_state.input_disabled:
     st.session_state.executing = True
     st.rerun()
 
-# 尝试多种编码方式读取文件
-def load_task_instructions(file_path):
+# 根据索引从json文件的多个task种选择指定的task执行，默认是全选
+def load_task_instructions(file_path, select="All"):
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
@@ -410,23 +474,78 @@ def load_task_instructions(file_path):
     except FileNotFoundError:
         st.error(f"❌ 未找到任务文件: {file_path}")
         return []
-    return [sub_task.get("instruction", "") for sub_task in data.get("tasks", []) if sub_task.get("instruction")]
+    if select=="All":   
+        return_instructions_list = [sub_task.get("instruction", "") for sub_task in data.get("tasks", []) if sub_task.get("instruction")]
+    else:
+        try:
+            index = int(select) - 1  # 转成索引（假设 select 从 1 开始）
+            tasks = [sub_task.get("instruction", "") for sub_task in data.get("tasks", []) if sub_task.get("instruction")]
+            if 0 <= index < len(tasks):
+                return_instructions_list = [tasks[index]]
+            else:
+                return_instructions_list = []
+        except ValueError:
+            # select 不是数字
+            return_instructions_list = []
+
+    return return_instructions_list
 
 # 处理话费充值按钮点击
 if bill_clicked and not st.session_state.input_disabled:
     instructions = load_task_instructions("data/Mobile-Eval-E/China_Union_bill_tasks.json")
     if instructions:
-        st.session_state.messages.append({"role": "user", "content": "话费充值"})
+        st.session_state.messages.append({"role": "user", "content": "\n".join(instructions)})
         st.session_state.task_to_execute = "\n".join(instructions)
         st.session_state.input_disabled = True
         st.session_state.executing = True
         st.rerun()
 
-# 处理权益领取按钮点击
+# 处理联通福利领取按钮点击
 if reward_clicked and not st.session_state.input_disabled:
     instructions = load_task_instructions("data/Mobile-Eval-E/China_Union_Rewards_tasks.json")
     if instructions:
-        st.session_state.messages.append({"role": "user", "content": "权益领取"})
+        st.session_state.messages.append({"role": "user", "content": "\n".join(instructions)})
+        st.session_state.task_to_execute = "\n".join(instructions)
+        st.session_state.input_disabled = True
+        st.session_state.executing = True
+        st.rerun()
+
+# 处理联通设置电话拦截按钮点击
+if harassment_clicked and not st.session_state.input_disabled:
+    instructions = load_task_instructions("data/Mobile-Eval-E/China_Union_harassment_simple_task.json", select="1")
+    if instructions:
+        st.session_state.messages.append({"role": "user", "content": "\n".join(instructions)})
+        st.session_state.task_to_execute = "\n".join(instructions)
+        st.session_state.input_disabled = True
+        st.session_state.executing = True
+        st.rerun()
+
+# 处理美团外卖按钮点击
+if meituan_clicked and not st.session_state.input_disabled:
+    instructions = load_task_instructions("data/Mobile-Eval-E/Meituan_tasks.json")
+    if instructions:
+        st.session_state.messages.append({"role": "user", "content": "\n".join(instructions)})
+        st.session_state.task_to_execute = "\n".join(instructions)
+        st.session_state.input_disabled = True
+        st.session_state.executing = True
+        st.rerun()
+
+# 处理详细账单查询按钮点击
+if billinfo_clicked and not st.session_state.input_disabled:
+    instructions = load_task_instructions("data/Mobile-Eval-E/China_Union_bill_tasks.json")
+    if instructions:
+        st.session_state.messages.append({"role": "user", "content": "\n".join(instructions)})
+        st.session_state.task_to_execute = "\n".join(instructions)
+        st.session_state.input_disabled = True
+        st.session_state.executing = True
+        st.rerun()
+
+# 处理w微信社交按钮点击
+if webchat_clicked and not st.session_state.input_disabled:
+    instructions = load_task_instructions("data/Mobile-Eval-E/WeChat_tasks.json", select="3")
+    if instructions:
+        print("instructions is: ", instructions)
+        st.session_state.messages.append({"role": "user", "content": "\n".join(instructions)})
         st.session_state.task_to_execute = "\n".join(instructions)
         st.session_state.input_disabled = True
         st.session_state.executing = True
