@@ -263,6 +263,15 @@ with input_cols[1]:
     else:
         st.button("🎤", disabled=True, use_container_width=True)
 
+def is_valid_line(line: str) -> bool:
+    """判断输出行是否有效（非空、非undefined）"""
+    return bool(
+        line
+        and isinstance(line, str)
+        and line.strip()
+        and line.strip().lower() != "undefined"
+)
+
 with input_cols[2]:
     if st.button("停止", disabled=not st.session_state.get("executing"), use_container_width=True):
         pid = st.session_state.get("pid")
@@ -275,13 +284,20 @@ with input_cols[2]:
 
                 # 立即在 session_state messages 写入终止信息，保证新 run 能显示
                 if st.session_state.messages and st.session_state.messages[-1]["role"] == "assistant":
-                   # 把三反引号保持整洁地追加终止提示
-                    content = st.session_state.messages[-1]["content"]
-                    # 移除尾部多余的反引号然后追加
-                    content = content.rstrip("`") 
-                    st.session_state.messages[-1]["content"] = content + "\n<span style='color: orange;'>⚠️ 任务已手动终止</span>\n```"
+                    raw_content = st.session_state.messages[-1]["content"]
+                    # 拆成行，去掉脏数据
+                    cleaned_lines = [
+                        line for line in raw_content.splitlines() if is_valid_line(line)
+                    ]
+                    # 重新组合 + 高亮终止提示
+                    final_content = "```\n" + "\n".join(cleaned_lines) + \
+                        "\n<span style='color: orange;'>⚠️ 任务已手动终止</span>\n```"
+                    st.session_state.messages[-1]["content"] = final_content
                 else:
-                    st.session_state.messages.append({"role":"assistant","content":"\n<span style='color: orange;'>⚠️ 任务已手动终止</span>\n```"})
+                    st.session_state.messages.append({
+                        "role": "assistant",
+                        "content": "\n<span style='color: orange;'>⚠️ 任务已手动终止</span>\n```"
+                    })
 
                 reset()
                 st.success("任务已终止")
@@ -497,21 +513,22 @@ if st.session_state.task_to_execute and st.session_state.executing and not st.se
                                     break
                             break    # 找到活动模块后退出循环
 
-                    if display_line:
-                        # 如果流中出现孤立的 "undefined" 字符串，我们仍然在流式显示时保留原样
-                        # （最终写入 messages 时会被清理）
+                    # 只保留有效行
+                    if is_valid_line(formatted_line):
                         output_lines.append(formatted_line)
 
                     # 把当前进度写回 session_state，保证下次 rerun 还能看到最新进度
                     try:
-                       st.session_state.messages[-1]["content"] = "```\n" + "".join(output_lines) + "\n```"
+                       cleaned_output = [line for line in output_lines if is_valid_line(line)]
+                       st.session_state.messages[-1]["content"] = "```\n" + "".join(cleaned_output) + "\n```"
+                       #st.session_state.messages[-1]["content"] = "```\n" + "".join(output_lines) + "\n```"
                     except Exception:
                        pass
 
                     # 实时刷新到聊天占位（此处显示在 output_container）
                     message_placeholder.markdown(
                         "<div style='font-family: monospace; white-space: pre-wrap;'>" +
-                        "".join(output_lines) +
+                        "".join(cleaned_output) +
                         "</div>",
                         unsafe_allow_html=True
                         )
@@ -535,13 +552,15 @@ if st.session_state.task_to_execute and st.session_state.executing and not st.se
 
                 # 把当前进度写回 session_state，保证下次 rerun 还能看到最新进度
                 try:
-                    st.session_state.messages[-1]["content"] = "```\n" + "".join(output_lines) + "\n```"
+                    cleaned_output = [line for line in output_lines if is_valid_line(line)]
+                    st.session_state.messages[-1]["content"] = "```\n" + "".join(cleaned_output) + "\n```"
+                    #st.session_state.messages[-1]["content"] = "```\n" + "".join(output_lines) + "\n```"
                 except Exception:
                     pass
 
                 message_placeholder.markdown(
                 "<div style='font-family: monospace; white-space: pre-wrap;'>" +
-                "".join(output_lines) +
+                "".join(cleaned_output) +
                 "</div>",
                 unsafe_allow_html=True
                 )
@@ -552,13 +571,15 @@ if st.session_state.task_to_execute and st.session_state.executing and not st.se
                 
                 # 把当前进度写回 session_state，保证下次 rerun 还能看到最新进度
                 try:
-                    st.session_state.messages[-1]["content"] = "```\n" + "".join(output_lines) + "\n```"
+                    cleaned_output = [line for line in output_lines if is_valid_line(line)]
+                    st.session_state.messages[-1]["content"] = "```\n" + "".join(cleaned_output) + "\n```"
+                    #st.session_state.messages[-1]["content"] = "```\n" + "".join(output_lines) + "\n```"
                 except Exception:
                     pass
 
                 message_placeholder.markdown(
                     "<div style='font-family: monospace; white-space: pre-wrap;'>" +
-                    "".join(output_lines) +
+                    "".join(cleaned_output) +
                     "</div>",
                     unsafe_allow_html=True
                 )
