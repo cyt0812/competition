@@ -221,32 +221,98 @@ with st.sidebar:
 
 # 底部输入区（固定）
 st.markdown('<div id="input-area">', unsafe_allow_html=True)
-mode_task_cols = st.columns([4, 1, 1])
-with mode_task_cols[0]:
-    st.markdown("<div style='height: 38px;'></div>", unsafe_allow_html=True)
-with mode_task_cols[1]:
-    bill_clicked = st.button(
-        "联通话费充值",
-        key="bill_btn",
-        disabled=st.session_state.input_disabled,
-        help="余额低于20元时充值",
-        use_container_width=True
-    )
 
-with mode_task_cols[2]:
-    reward_clicked = st.button(
-        "权益领取",
-        key="reward_btn",
-        disabled=st.session_state.input_disabled,
-        help="联通权益领取",
-        use_container_width=True
-    )
+# CSS 样式：按钮不换行、宽度固定
+st.markdown("""
+    <style>
+    div.stButton > button {
+        white-space: nowrap !important; /* 不换行 */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        height: 28px;                   /* 固定高度 */
+        padding: 0 4px;                  /* 左右内边距 */
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# 根据索引从json文件的多个task种选择指定的task执行，默认是全选
+def load_task_instructions(file_path, select="All"):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    except UnicodeDecodeError:
+        try:
+            with open(file_path, 'r', encoding='gbk') as f:
+                data = json.load(f)
+        except UnicodeDecodeError:
+            try:
+                with open(file_path, 'r', encoding='gb2312') as f:
+                    data = json.load(f)
+            except UnicodeDecodeError:
+                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    data = json.load(f)
+    except FileNotFoundError:
+        st.error(f"❌ 未找到任务文件: {file_path}")
+        return []
+    if select=="All":   
+        return_instructions_list = [sub_task.get("instruction", "") for sub_task in data.get("tasks", []) if sub_task.get("instruction")]
+    else:
+        try:
+            index = int(select) - 1  # 转成索引（假设 select 从 1 开始）
+            tasks = [sub_task.get("instruction", "") for sub_task in data.get("tasks", []) if sub_task.get("instruction")]
+            if 0 <= index < len(tasks):
+                return_instructions_list = [tasks[index]]
+            else:
+                return_instructions_list = []
+        except ValueError:
+            # select 不是数字
+            return_instructions_list = []
+
+    return return_instructions_list
+
+# 通用按钮处理函数
+def handle_button_click(button_key, file_path, select=None):
+    """处理按钮点击逻辑"""
+    if st.session_state.get(button_key, False) and not st.session_state.input_disabled:
+        instructions = load_task_instructions(file_path, select=select)
+        if instructions:
+            st.session_state.messages.append({"role": "user", "content": "\n".join(instructions)})
+            st.session_state.task_to_execute = "\n".join(instructions)
+            st.session_state.input_disabled = True
+            st.session_state.executing = True
+            st.rerun()
+
+# 按钮配置（label, key, tooltip, 文件路径, select参数）
+buttons = [
+    ("充值", "bill_clicked", "联通话费查询，余额低于20元时充值", "data/Mobile-Eval-E/China_Union_bill_tasks.json", "All"),
+    ("权益", "reward_clicked", "联通权益领取", "data/Mobile-Eval-E/China_Union_Rewards_tasks.json", "All"),
+    ("账单", "billinfo_clicked", "查询联通账号当月详细账单", "data/Mobile-Eval-E/China_Union_check_bill_tasks.json", "All"),
+    ("拦截", "harassment_clicked", "联通账号设置拦截骚扰电话", "data/Mobile-Eval-E/China_Union_harassment_simple_task.json", "1"),
+    ("记账", "suihsouji_clicked", "随手记记账", "data/Mobile-Eval-E/SuiShouJi_tasks.json", "All"),
+    ("淘宝", "taobao_clicked", "淘宝加购飞鸟集", "data/Mobile-Eval-E/Taobao_tasks.json", "All"),
+    ("美团", "meituan_clicked", "美团外卖点一份黄焖鸡米饭", "data/Mobile-Eval-E/Meituan_tasks.json", "All"),
+    ("微信", "webchat_clicked", "微信发朋友圈", "data/Mobile-Eval-E/WeChat_tasks.json", "3"),
+    ("天气", "weather_clicked", "查看天气记录到Note", "data/Mobile-Eval-E/Weather_Notes_tasks.json", "All"),
+]
+
+# 自动等分列
+cols = st.columns(len(buttons))
+
+# 循环绘制按钮
+for col, (label, key, tip, path, select) in zip(cols, buttons):
+    with col:
+        st.markdown("<div style='height: 5px;'></div>", unsafe_allow_html=True)
+        clicked = st.button(label, key=key, help=tip, 
+                                          disabled=st.session_state.input_disabled,
+                                          use_container_width=True)
+        if clicked:
+            handle_button_click(key, path, select)
 
 #输入框以及语音输入，发送，停止三个按钮
 input_cols = st.columns([10, 1, 1], gap="small")
 with input_cols[0]:
     user_text = st.chat_input(
-        placeholder="请输入任务指令，例如：打开微信并发送一条消息",
+        placeholder="请输入任务指令，例如：打开微信并发送一条消息给联系人周XX",
         key="custom_input",
         disabled=st.session_state.input_disabled or st.session_state.voice_active
     )
@@ -390,47 +456,6 @@ if user_text and not st.session_state.input_disabled:
     st.session_state.input_disabled = True
     st.session_state.executing = True
     st.rerun()
-
-# 尝试多种编码方式读取文件
-def load_task_instructions(file_path):
-    try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-    except UnicodeDecodeError:
-        try:
-            with open(file_path, 'r', encoding='gbk') as f:
-                data = json.load(f)
-        except UnicodeDecodeError:
-            try:
-                with open(file_path, 'r', encoding='gb2312') as f:
-                    data = json.load(f)
-            except UnicodeDecodeError:
-                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                    data = json.load(f)
-    except FileNotFoundError:
-        st.error(f"❌ 未找到任务文件: {file_path}")
-        return []
-    return [sub_task.get("instruction", "") for sub_task in data.get("tasks", []) if sub_task.get("instruction")]
-
-# 处理话费充值按钮点击
-if bill_clicked and not st.session_state.input_disabled:
-    instructions = load_task_instructions("data/Mobile-Eval-E/China_Union_bill_tasks.json")
-    if instructions:
-        st.session_state.messages.append({"role": "user", "content": "话费充值"})
-        st.session_state.task_to_execute = "\n".join(instructions)
-        st.session_state.input_disabled = True
-        st.session_state.executing = True
-        st.rerun()
-
-# 处理权益领取按钮点击
-if reward_clicked and not st.session_state.input_disabled:
-    instructions = load_task_instructions("data/Mobile-Eval-E/China_Union_Rewards_tasks.json")
-    if instructions:
-        st.session_state.messages.append({"role": "user", "content": "权益领取"})
-        st.session_state.task_to_execute = "\n".join(instructions)
-        st.session_state.input_disabled = True
-        st.session_state.executing = True
-        st.rerun()
 
 # --------------------------
 # 任务执行逻辑（输出渲染到 output_container，保证位于输入之上）
