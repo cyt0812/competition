@@ -289,14 +289,22 @@ with input_cols[2]:
                     cleaned_lines = [
                         line for line in raw_content.splitlines() if is_valid_line(line)
                     ]
-                    # 重新组合 + 高亮终止提示
-                    final_content = "```\n" + "\n".join(cleaned_lines) + \
-                        "\n<span style='color: orange;'>⚠️ 任务已手动终止</span>\n```"
+                    # 重新组合 + 高亮终止提示（等宽字体 + Markdown 保留）
+                    final_content = (
+                        "\n".join(cleaned_lines) +
+                        "<div style='font-family: monospace; white-space: pre-wrap;'>"
+                        + "\n<span style='color: orange;'>⚠️ 任务已手动终止</span>"
+                        + "</div>"
+                    )
                     st.session_state.messages[-1]["content"] = final_content
                 else:
                     st.session_state.messages.append({
                         "role": "assistant",
-                        "content": "\n<span style='color: orange;'>⚠️ 任务已手动终止</span>\n```"
+                        "content": (
+                            "<div style='font-family: monospace; white-space: pre-wrap;'>"
+                            "<span style='color: orange;'>⚠️ 任务已手动终止</span>"
+                            "</div>"
+                        )
                     })
 
                 reset()
@@ -445,142 +453,101 @@ if st.session_state.task_to_execute and st.session_state.executing and not st.se
             message_placeholder = st.empty()
             message_placeholder.markdown("🎯 正在执行任务，请稍候...\n")
             output_lines = []
+
             try:
-                # 使用 -u 保证 run.py 的 stdout 无缓冲（更可靠的流式输出）
+                # 流式子进程：文本模式 + 行缓冲 + UTF-8
                 process = subprocess.Popen(
                     ["python", "-u", "run.py", "--run_name", "ui-task", "--setting", "individual", "--instruction", prompt],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
-                    bufsize=1
+                    bufsize=1,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace"
                 )
                 st.session_state.pid = process.pid
 
-                # 初始化模块标记
-                module_flags = {
-                    'Perceptor': False,
-                    'Manager': False,
-                    'Operator': False,
-                    'Action Reflector': False,
-                    'NoteKeeper': False,
-                    'Experience Reflector': False
-                }
+                module_flags = {m: False for m in [
+                    'Perceptor', 'Manager', 'Operator', 'Action Reflector',
+                    'NoteKeeper', 'Experience Reflector'
+                ]}
 
-                # 在启动 process 之前，确保有一个 assistant 条目可更新（持久化位）
                 if not st.session_state.messages or st.session_state.messages[-1]["role"] != "assistant":
                     st.session_state.messages.append({"role": "assistant", "content": "```\n(执行中...)\n```"})
                 else:
-                    # 重置上一个 assistant 内容（可选）
                     st.session_state.messages[-1]["content"] = "```\n(执行中...)\n```"
 
-                # 逐行读取二进制输出并尝试多编码解码
-                for raw in iter(process.stdout.readline, b''):
-                    if not raw:
-                        break
-                    try:
-                        decoded_line = raw.decode('utf-8')
-                    except UnicodeDecodeError:
-                        decoded_line = raw.decode('gbk', errors='replace')
+                # 实时逐行读取
+                for decoded_line in process.stdout:
                     display_line = True
                     formatted_line = decoded_line
 
-                    # 检测模块标识（不区分大小写）
+                    # 检测当前模块
                     for module in module_flags:
                         if module.lower() in decoded_line.lower() and 'thinking' not in decoded_line.lower():
-                            module_flags[module] = True
-                            for m in module_flags:
-                                if m != module:
-                                    module_flags[m] = False
+                            module_flags = {m: (m == module) for m in module_flags}
                             break
 
-                    # 检查是否为关键步骤并标蓝
-                    formatted_line = decoded_line
+                    # 高亮关键步骤
                     module_keywords = {
                         'Manager': ['Current Subgoal:'],
                         'Operator': ['Executing atomic action:'],
                         'Action Reflector': ['Progress Status:'],
                         'Experience Reflector': ['Progress Logs:', 'Finish Thought:']
-                        # Perceptor 和 NoteKeeper 模块没有需要标蓝的关键步骤
                     }
-
-                    # 检查当前活动模块，并匹配对应关键词（不区分大小写）
                     for module, keywords in module_keywords.items():
                         if module_flags[module]:
                             for keyword in keywords:
                                 if keyword.lower() in decoded_line.lower():
-                                    # 转义可能影响HTML的特殊字符
                                     escaped_line = decoded_line.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
                                     formatted_line = f'<span style="color: blue;">{escaped_line}</span>'
                                     break
-                            break    # 找到活动模块后退出循环
+                            break
 
-                    # 只保留有效行
                     if is_valid_line(formatted_line):
                         output_lines.append(formatted_line)
 
-                    # 把当前进度写回 session_state，保证下次 rerun 还能看到最新进度
-                    try:
-                       cleaned_output = [line for line in output_lines if is_valid_line(line)]
-                       st.session_state.messages[-1]["content"] = "```\n" + "".join(cleaned_output) + "\n```"
-                       #st.session_state.messages[-1]["content"] = "```\n" + "".join(output_lines) + "\n```"
-                    except Exception:
-                       pass
+                    # 更新 session_state
+                    cleaned_output = [line for line in output_lines if is_valid_line(line)]
+                    #st.session_state.messages[-1]["content"] = "```\n" + "".join(cleaned_output) + "\n```"
+                    st.session_state.messages[-1]["content"] = "".join(cleaned_output)
 
-                    # 实时刷新到聊天占位（此处显示在 output_container）
+                    # 实时刷新 UI
                     message_placeholder.markdown(
-                        "<div style='font-family: monospace; white-space: pre-wrap;'>" +
-                        "".join(cleaned_output) +
-                        "</div>",
+                        "\n".join(cleaned_output),
                         unsafe_allow_html=True
-                        )
+                    )
 
                 process.wait()
 
-                # 结果状态颜色
+                # 根据返回状态标记任务结果
                 result_color = 'green'
-                # 改进：仅在错误日志中明确描述失败原因时才标识任务失败
-                # 匹配格式如：ERROR: [Errno 2] No such file or directory: './screenshot/screenshot.png'
-                if (process.returncode != 0 or 
-                    any('执行失败' in line for line in output_lines) or 
-                    any('ERROR:' in line and len(line.split('ERROR:', 1)) > 1 and line.split('ERROR:', 1)[1].strip() for line in output_lines) or 
-                    (any('error' in line.lower() for line in output_lines) and 
+                if (process.returncode != 0 or
+                    any('执行失败' in line for line in output_lines) or
+                    any('ERROR:' in line and line.split('ERROR:', 1)[1].strip() for line in output_lines) or
+                    (any('error' in line.lower() for line in output_lines) and
                     not any('Error Description: None' in line for line in output_lines))):
                     result_color = 'red'
 
-                # 添加结果状态
                 result_line = f'<span style="color: {result_color};">任务{"成功完成" if result_color == "green" else "执行失败"}</span>'
                 output_lines.append(result_line)
 
-                # 把当前进度写回 session_state，保证下次 rerun 还能看到最新进度
-                try:
-                    cleaned_output = [line for line in output_lines if is_valid_line(line)]
-                    st.session_state.messages[-1]["content"] = "```\n" + "".join(cleaned_output) + "\n```"
-                    #st.session_state.messages[-1]["content"] = "```\n" + "".join(output_lines) + "\n```"
-                except Exception:
-                    pass
-
+                cleaned_output = [line for line in output_lines if is_valid_line(line)]
+                #st.session_state.messages[-1]["content"] = "```\n" + "".join(cleaned_output) + "\n```"
+                st.session_state.messages[-1]["content"] = "".join(cleaned_output)
                 message_placeholder.markdown(
-                "<div style='font-family: monospace; white-space: pre-wrap;'>" +
-                "".join(cleaned_output) +
-                "</div>",
-                unsafe_allow_html=True
+                    "\n".join(cleaned_output),
+                    unsafe_allow_html=True
                 )
 
             except Exception as e:
                 error_line = f"<span style='color: red;'>执行失败：{str(e)}</span>"
                 output_lines.append(error_line)
-                
-                # 把当前进度写回 session_state，保证下次 rerun 还能看到最新进度
-                try:
-                    cleaned_output = [line for line in output_lines if is_valid_line(line)]
-                    st.session_state.messages[-1]["content"] = "```\n" + "".join(cleaned_output) + "\n```"
-                    #st.session_state.messages[-1]["content"] = "```\n" + "".join(output_lines) + "\n```"
-                except Exception:
-                    pass
-
+                cleaned_output = [line for line in output_lines if is_valid_line(line)]
+                #st.session_state.messages[-1]["content"] = "```\n" + "".join(cleaned_output) + "\n```"
+                st.session_state.messages[-1]["content"] = "".join(cleaned_output)
                 message_placeholder.markdown(
-                    "<div style='font-family: monospace; white-space: pre-wrap;'>" +
-                    "".join(cleaned_output) +
-                    "</div>",
+                    "\n".join(cleaned_output),
                     unsafe_allow_html=True
                 )
 
