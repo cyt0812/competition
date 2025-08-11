@@ -5,7 +5,7 @@
     "tasks": [
         {
             "task_id": "1_check_remaining_credit",
-            "instruction": "Find an application called China Unicom, then check the remaining credit. ",
+            "instruction": "Find an application called China Unicom, then check the remaining credit",
             "type": "single_app",
             "apps": [
                 "China Unicom"
@@ -21,7 +21,7 @@
         },
         {
             "task_id": "2_charge",
-            "instruction": "If the phone bill is less than 20 RMB, use Alipay to charge it.If not, stop.",
+            "instruction": "If the phone bill is less than 20 RMB, use Alipay to charge it.If not, stop",
             "type": "single_app",
             "apps": [
                 "China Unicom"
