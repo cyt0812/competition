@@ -5,7 +5,7 @@
     "tasks": [
         {
             "task_id": "1_weather",
-            "instruction": "Go to your browser and search for the weather for the next few days and record it in Notes.",
+            "instruction": "Go to your browser and search for the weather for the next few days and record it in Notes",
             "type": "multi_app",
             "apps": ["Browser","Notes"],
             "rubrics": [
