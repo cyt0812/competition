@@ -26,7 +26,7 @@
         },
         {
             "task_id": "2_WeChat_Moments_post_like",
-            "instruction": "Open WeChat and like a post under a randomly selected friend's Moments post.",
+            "instruction": "Open WeChat and like a post under a randomly selected friend's Moments post",
             "type": "single_app",
             "apps": [
                 "WeChat"
@@ -50,7 +50,7 @@
         },
         {
             "task_id": "3_WeChat_Moments_post",
-            "instruction": "Post a WeChat Moment by randomly selecting a photo from the phone gallery, and include a description of at least 20 characters.",
+            "instruction": "Post a WeChat Moment by randomly selecting a photo from the phone gallery, and include a description of at least 20 characters",
             "type": "single_app",
             "apps": [
                 "WeChat"
