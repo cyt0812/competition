@@ -5,7 +5,7 @@
   "tasks": [
     {
       "task_id": "1_record_expense",
-      "instruction": "Today I ate out and spent 80 yuan, using 随手记 (SuiShouJi) to record the transaction.",
+      "instruction": "Today I ate out and spent 80 yuan, using 随手记 (SuiShouJi) to record the transaction",
       "type": "single_app",
       "apps": ["SuiShouJi"],
       "rubrics": [
