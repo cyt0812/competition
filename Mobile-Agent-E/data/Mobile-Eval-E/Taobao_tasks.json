@@ -5,17 +5,19 @@
   "tasks": [
     {
       "task_id": "1_taobao_add_2_books",
-      "instruction": "Go to Taobao to purchase 'Stray Birds', sort the results by price from low to high, compare the options, select the 2 cheapest purchase methods, add them to the shopping cart, and finally stay on the shopping cart page.",
+      "instruction": "去淘宝加购《飞鸟集》，将搜索结果按价格从低到高排序，对比选项，选择最便宜的两件商品，加入购物车，最后停留在购物车页面。",
       "type": "single_app",
       "apps": ["Taobao"],
       "rubrics": [
         "Opened the Taobao app",
-        "Searched for 'Stray Birds' (飞鸟集) on Taobao",
-        "Sorted the search results by price from low to high",
-        "Identified at least two valid items in the search results",
-        "Selected the two cheapest valid items",
-        "Added the first cheapest item to the shopping cart",
-        "Added the second cheapest item to the shopping cart",
+        "Searched for '飞鸟集' on Taobao and entered the search results page",
+        "Opened the sorting options and selected 'Price from low to high'",
+        "Successfully sorted the search results by price from low to high",
+        "Identified the first cheapest item and entered its details page",
+        "Selected specifications for the first item and added it to the shopping cart",
+        "Returned to the search results page and identified the second cheapest item",
+        "Entered the details page of the second cheapest item",
+        "Selected specifications for the second item and added it to the shopping cart",
         "Navigated to the shopping cart page"
       ],
       "human_reference_operations": [
