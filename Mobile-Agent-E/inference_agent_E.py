@@ -5,6 +5,7 @@ import torch
 import shutil
 from PIL import Image, ImageDraw
 from time import sleep
+import re
 
 
 from MobileAgentE.api import inference_chat
@@ -439,6 +440,15 @@ def get_reasoning_model_api_response(chat, model_type=BACKBONE_TYPE, model=None,
     else:
         raise ValueError(f"Unknown model type: {model_type}")
 
+def validate_response_format(response: str) -> bool:
+    """
+    验证模型输出是否严格符合要求的结构
+    """
+    pattern = re.compile(
+        r"^### Thought ###\n.+?\n### Action ###\n(?:```json\n)?\{.+?\}(?:\n```)?\n+### Description ###\n.+",
+        re.DOTALL
+    )
+    return bool(pattern.match(response.strip()))
 
 def run_single_task(
         instruction,
@@ -904,7 +914,21 @@ def run_single_task(
         prompt_action = operator.get_prompt(info_pool)
         chat_action = operator.init_chat()
         chat_action = add_response("user", prompt_action, chat_action, image=screenshot_file)
-        output_action = get_reasoning_model_api_response(chat_action, temperature=temperature)
+        #output_action = get_reasoning_model_api_response(chat_action, temperature=temperature)
+        MAX_RETRY = 3
+        for attempt in range(MAX_RETRY):
+            chat_action = add_response("user", prompt_action, chat_action, image=screenshot_file)
+            output_action = get_reasoning_model_api_response(chat_action, temperature=temperature)
+            if validate_response_format(output_action):
+                break
+            else:
+                print("output_action is: ", output_action)
+                print(f"[WARN] 格式不正确，重新生成... (第 {attempt+1} 次)")
+                prompt_action += "\nRemember: Your previous output was rejected because it did not match the EXACT required format. Now regenerate strictly following the format.\n"
+
+        if not validate_response_format(output_action):
+            raise ValueError("模型多次生成失败，仍然不符合格式要求")
+
         parsed_result_action = operator.parse_response(output_action)
         action_thought, action_object_str, action_description = parsed_result_action['thought'], parsed_result_action[
             'action'], parsed_result_action['description']

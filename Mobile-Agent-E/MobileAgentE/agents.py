@@ -347,7 +347,10 @@ class Operator(BaseAgent):
         return operation_history
 
     def get_prompt(self, info_pool: InfoPool) -> str:
-        prompt = "### User Instruction ###\n"
+        prompt = "You are an AI agent that MUST strictly follow a given output structure. \
+        r output format does not exactly match the required format, it will be considered INVALID and you must regenerate.\n\n"
+        
+        prompt += "### User Instruction ###\n"
         prompt += f"{info_pool.instruction}\n\n"
 
         prompt += "### Overall Plan ###\n"
@@ -468,16 +471,18 @@ class Operator(BaseAgent):
         prompt += "### Description ###\n"
         prompt += "A brief description of the chosen action and the expected outcome."
         
-        prompt += "Your response MUST strictly follow the structure below:\n"
+        prompt += "---\n"
+        prompt += "### FINAL RESPONSE FORMAT (MANDATORY) ###\n"
+        prompt += "Your response MUST strictly follow EXACTLY this structure:\n\n"
         prompt += "### Thought ###\n"
         prompt += "...your reasoning here...\n"
         prompt += "### Action ###\n"
         prompt += "{\"name\": ..., \"arguments\": {...} }\n"
         prompt += "### Description ###\n"
         prompt += "...brief description of the chosen action and the expected outcome...\n\n"
-
-        prompt += "Do not omit or change the section headers: '### Thought ###', '### Action ###', and '### Description ###'.\n"
-        prompt += "To ensure your response is valid, always include both the ### Action ### and ### Description ### sections.\n"
+        prompt += "Do NOT add extra text before or after this structure. Do NOT omit any section. Do NOT rename headers. \
+        If your output does not match exactly, it will be rejected.\n"
+    
         return prompt
 
     def execute_atomic_action(self, action: str, arguments: dict, **kwargs) -> None:
