@@ -37,7 +37,7 @@
         },
         {
             "task_id": "2_unicom_harassment_simple",
-            "instruction": "Retrieve the number of blocked calls and marketing SMS messages in the 'China Unicom Security Manager' module under the 'Services' section of the China Unicom app.",
+            "instruction": "Retrieve the number of blocked calls and marketing SMS messages in the 'China Unicom Security Manager' module under the 'Services' section of the China Unicom app",
             "type": "single_app",
             "apps": [
                 "China Unicom"
