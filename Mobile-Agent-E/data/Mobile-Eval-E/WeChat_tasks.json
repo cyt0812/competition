@@ -5,7 +5,7 @@
     "tasks": [
         {
             "task_id": "1_WeChat_send_msg",
-            "instruction": "Open WeChat and send the message 'Anything is fine' to the group chat 'ZhouLei'.",
+            "instruction": "Open WeChat and send the message 'Anything is fine' to the group chat 'ZhouLei'",
             "type": "single_app",
             "apps": [
                 "WeChat"
