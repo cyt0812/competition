@@ -5,7 +5,7 @@
   "tasks": [
     {
       "task_id": "1_claim_rights",
-      "instruction": "到中国联通的福利中心去领取权益。",
+      "instruction": "到中国联通的福利中心去领取权益",
       "type": "single_app",
       "apps": [
         "China Unicom"
