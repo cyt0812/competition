@@ -5,8 +5,8 @@ import io
 
 # ─── 防止 Windows 控制台 GBK 编码错误 ─────────────────────────────────────
 # 将 stdout/stderr 强制设置为 UTF-8 编码，并在遇到无法编码的字符时替换
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace', line_buffering=True)
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace', line_buffering=True)
 # ────────────────────────────────────────────────────────────────────────────
 
 from inference_agent_E import run_single_task
