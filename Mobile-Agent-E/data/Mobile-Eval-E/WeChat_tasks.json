@@ -50,7 +50,7 @@
         },
         {
             "task_id": "3_WeChat_Moments_post",
-            "instruction": "Post a WeChat Moment by randomly selecting a photo from the phone gallery, and include a description of at least 20 characters",
+            "instruction": "Post a WeChat Moment by selecting a photo related to food from the phone gallery, and include a description of at least 20 characters",
             "type": "single_app",
             "apps": [
                 "WeChat"
