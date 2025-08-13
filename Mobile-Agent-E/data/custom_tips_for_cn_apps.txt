@@ -34,4 +34,6 @@ INIT_TIPS = """
 16.When looking for content, swipe multiple times to thoroughly identify all content on the entire page.
 
 17. If a module has already been selected, there will be a checkmark-like indicator in the top-right corner. Do not click on modules that are already selected.
+
+18. When using Suishouji for bookkeeping, after clicking the "Complete" button, you must click the "Finish" button to ensure the bookkeeping is finalized.
 """
