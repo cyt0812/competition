@@ -9,6 +9,7 @@ import magic  # 用于检测MIME类型
 import io
 import json
 import time
+import re
 
 st.set_page_config(page_title="Mobile Agent Chat", layout="wide")
 
@@ -186,8 +187,9 @@ with st.sidebar:
     if st.session_state.messages:
         for msg in st.session_state.messages:
             role = "👤 用户" if msg["role"] == "user" else "🤖 助手"
-            content = msg["content"].strip()
-            st.markdown(f"**{role}:**\n\n{content[:100]}{'...' if len(content) > 100 else ''}")
+            # content = msg["content"].strip() if msg["role"] == "user" else re.sub(r"<.*?>", "", msg["content"].strip().split("\n")[-1]).strip()
+            content = msg["content"].strip() if msg["role"] == "user" else msg["content"].strip().split("\n")[-1]
+            st.markdown(f"**{role}:**\n\n{content[:100]}{'...' if len(content) > 100 else ''}", unsafe_allow_html=True)
     else:
         st.info("暂无对话记录")
 
