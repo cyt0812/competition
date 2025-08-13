@@ -6,7 +6,7 @@
     "tasks": [
         {
             "task_id": "1_unicom_harassment_simple",
-            "instruction": "Set up spam call blocking in the China Unicom Security Manager module under the services section of the Unicom app",
+            "instruction": "Enable spam call blocking in the China Unicom Security Manager section of the Unicom app",
             "type": "single_app",
             "apps": ["China Unicom"],
             "rubrics": [
