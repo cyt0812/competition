@@ -14,7 +14,7 @@ addict
 termcolor
 shapely
 datasets==2.19.1
-modelscope
+modelscope==1.28.0
 matplotlib
 dashscope
 streamlit
